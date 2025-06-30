@@ -1,0 +1,401 @@
+#!/usr/bin/env python3
+"""
+Dolphin SLAM - 数据集分析工具
+分析 AUV-Based Multi-Sensor Dataset 并生成统计报告
+"""
+
+import argparse
+import os
+import pandas as pd
+import numpy as np
+import cv2
+import matplotlib.pyplot as plt
+from datetime import datetime
+from tqdm import tqdm
+import json
+
+class DatasetAnalyzer:
+    """分析 AUV 数据集"""
+    
+    def __init__(self, dataset_path):
+        self.dataset_path = dataset_path
+        self.report = {
+            'dataset_path': dataset_path,
+            'analysis_time': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+            'camera': {},
+            'sonar': {},
+            'navigation': {},
+            'synchronization': {},
+            'quality_metrics': {}
+        }
+        
+    def analyze(self):
+        """执行完整的数据集分析"""
+        print(f"分析数据集: {self.dataset_path}")
+        
+        # 检查数据集结构
+        if not self.check_dataset_structure():
+            return False
+            
+        # 分析各个模态
+        self.analyze_navigation()
+        self.analyze_camera()
+        self.analyze_sonar()
+        self.analyze_synchronization()
+        self.analyze_quality()
+        
+        # 生成报告
+        self.generate_report()
+        
+        return True
+        
+    def check_dataset_structure(self):
+        """检查数据集结构是否完整"""
+        required_files = ['navigation.csv', 'camera.csv', 'sonar.csv']
+        required_dirs = ['camera', 'sonar']
+        
+        # 检查文件
+        for file in required_files:
+            path = os.path.join(self.dataset_path, file)
+            if not os.path.exists(path):
+                print(f"错误：缺少必需文件 {file}")
+                return False
+                
+        # 检查目录
+        for dir in required_dirs:
+            path = os.path.join(self.dataset_path, dir)
+            if not os.path.isdir(path):
+                print(f"错误：缺少必需目录 {dir}")
+                return False
+                
+        # 检查 samples.json（可选）
+        samples_path = os.path.join(self.dataset_path, 'samples.json')
+        if os.path.exists(samples_path):
+            with open(samples_path, 'r') as f:
+                self.samples = json.load(f)
+        else:
+            self.samples = None
+            
+        return True
+        
+    def analyze_navigation(self):
+        """分析导航数据"""
+        print("\n分析导航数据...")
+        nav_path = os.path.join(self.dataset_path, 'navigation.csv')
+        nav_df = pd.read_csv(nav_path)
+        
+        self.report['navigation']['total_records'] = len(nav_df)
+        self.report['navigation']['columns'] = nav_df.columns.tolist()
+        
+        # 时间分析
+        if 'timestamp' in nav_df.columns:
+            nav_df['timestamp'] = pd.to_numeric(nav_df['timestamp'])
+            duration = nav_df['timestamp'].max() - nav_df['timestamp'].min()
+            freq = len(nav_df) / duration if duration > 0 else 0
+            
+            self.report['navigation']['duration_seconds'] = duration
+            self.report['navigation']['frequency_hz'] = freq
+            self.report['navigation']['start_time'] = nav_df['timestamp'].min()
+            self.report['navigation']['end_time'] = nav_df['timestamp'].max()
+            
+        # 轨迹统计
+        if all(col in nav_df.columns for col in ['latitude', 'longitude', 'depth']):
+            self.report['navigation']['latitude_range'] = [
+                nav_df['latitude'].min(), nav_df['latitude'].max()
+            ]
+            self.report['navigation']['longitude_range'] = [
+                nav_df['longitude'].min(), nav_df['longitude'].max()
+            ]
+            self.report['navigation']['depth_range'] = [
+                nav_df['depth'].min(), nav_df['depth'].max()
+            ]
+            
+            # 计算总行驶距离（简化）
+            if len(nav_df) > 1:
+                lat_diff = np.diff(nav_df['latitude'])
+                lon_diff = np.diff(nav_df['longitude'])
+                distances = np.sqrt(lat_diff**2 + lon_diff**2) * 111000  # 粗略转换为米
+                total_distance = np.sum(distances)
+                self.report['navigation']['estimated_distance_m'] = total_distance
+                
+        # 速度分析
+        if all(col in nav_df.columns for col in ['velocity_x', 'velocity_y', 'velocity_z']):
+            speeds = np.sqrt(nav_df['velocity_x']**2 + 
+                           nav_df['velocity_y']**2 + 
+                           nav_df['velocity_z']**2)
+            self.report['navigation']['speed_stats'] = {
+                'mean': speeds.mean(),
+                'std': speeds.std(),
+                'max': speeds.max(),
+                'min': speeds.min()
+            }
+            
+        print(f"  - 记录数: {self.report['navigation']['total_records']}")
+        print(f"  - 时长: {duration:.1f} 秒")
+        print(f"  - 频率: {freq:.2f} Hz")
+        
+    def analyze_camera(self):
+        """分析相机数据"""
+        print("\n分析相机数据...")
+        camera_csv = os.path.join(self.dataset_path, 'camera.csv')
+        camera_df = pd.read_csv(camera_csv)
+        
+        self.report['camera']['total_images'] = len(camera_df)
+        
+        # 采样分析几张图像
+        camera_dir = os.path.join(self.dataset_path, 'camera')
+        sample_images = []
+        sample_size = min(10, len(camera_df))
+        
+        for idx in np.linspace(0, len(camera_df)-1, sample_size, dtype=int):
+            filename = camera_df.iloc[idx]['filename']
+            img_path = os.path.join(camera_dir, filename)
+            
+            if os.path.exists(img_path):
+                img = cv2.imread(img_path)
+                if img is not None:
+                    sample_images.append({
+                        'filename': filename,
+                        'shape': img.shape,
+                        'mean_intensity': np.mean(img),
+                        'std_intensity': np.std(img)
+                    })
+                    
+        if sample_images:
+            # 假设所有图像大小相同
+            self.report['camera']['image_shape'] = sample_images[0]['shape']
+            self.report['camera']['sample_stats'] = {
+                'mean_intensity': np.mean([s['mean_intensity'] for s in sample_images]),
+                'std_intensity': np.mean([s['std_intensity'] for s in sample_images])
+            }
+            
+        # 时间戳分析
+        if 'timestamp' in camera_df.columns:
+            camera_df['timestamp'] = pd.to_numeric(camera_df['timestamp'])
+            duration = camera_df['timestamp'].max() - camera_df['timestamp'].min()
+            freq = len(camera_df) / duration if duration > 0 else 0
+            
+            self.report['camera']['duration_seconds'] = duration
+            self.report['camera']['frequency_hz'] = freq
+            
+        print(f"  - 图像数: {self.report['camera']['total_images']}")
+        if 'image_shape' in self.report['camera']:
+            shape = self.report['camera']['image_shape']
+            print(f"  - 图像尺寸: {shape[1]}x{shape[0]}")
+            
+    def analyze_sonar(self):
+        """分析声呐数据"""
+        print("\n分析声呐数据...")
+        sonar_csv = os.path.join(self.dataset_path, 'sonar.csv')
+        sonar_df = pd.read_csv(sonar_csv)
+        
+        self.report['sonar']['total_images'] = len(sonar_df)
+        
+        # 采样分析
+        sonar_dir = os.path.join(self.dataset_path, 'sonar')
+        sample_size = min(10, len(sonar_df))
+        
+        for idx in np.linspace(0, len(sonar_df)-1, sample_size, dtype=int):
+            filename = sonar_df.iloc[idx]['filename']
+            img_path = os.path.join(sonar_dir, filename)
+            
+            if os.path.exists(img_path):
+                # 声呐图像可能是不同格式
+                img = cv2.imread(img_path, cv2.IMREAD_ANYDEPTH)
+                if img is not None:
+                    self.report['sonar']['image_shape'] = img.shape
+                    self.report['sonar']['data_type'] = str(img.dtype)
+                    break
+                    
+        # 时间戳分析
+        if 'timestamp' in sonar_df.columns:
+            sonar_df['timestamp'] = pd.to_numeric(sonar_df['timestamp'])
+            duration = sonar_df['timestamp'].max() - sonar_df['timestamp'].min()
+            freq = len(sonar_df) / duration if duration > 0 else 0
+            
+            self.report['sonar']['duration_seconds'] = duration
+            self.report['sonar']['frequency_hz'] = freq
+            
+        print(f"  - 声呐图像数: {self.report['sonar']['total_images']}")
+        if 'image_shape' in self.report['sonar']:
+            shape = self.report['sonar']['image_shape']
+            print(f"  - 声呐图像尺寸: {shape[1]}x{shape[0]}")
+            
+    def analyze_synchronization(self):
+        """分析数据同步性"""
+        print("\n分析数据同步...")
+        
+        # 加载时间戳
+        nav_df = pd.read_csv(os.path.join(self.dataset_path, 'navigation.csv'))
+        camera_df = pd.read_csv(os.path.join(self.dataset_path, 'camera.csv'))
+        sonar_df = pd.read_csv(os.path.join(self.dataset_path, 'sonar.csv'))
+        
+        # 找出共同时间范围
+        start_time = max(
+            nav_df['timestamp'].min(),
+            camera_df['timestamp'].min(),
+            sonar_df['timestamp'].min()
+        )
+        
+        end_time = min(
+            nav_df['timestamp'].max(),
+            camera_df['timestamp'].max(),
+            sonar_df['timestamp'].max()
+        )
+        
+        self.report['synchronization']['common_start_time'] = start_time
+        self.report['synchronization']['common_end_time'] = end_time
+        self.report['synchronization']['common_duration'] = end_time - start_time
+        
+        # 计算时间对齐误差
+        # 简化：找最近邻时间戳的平均误差
+        sync_errors = []
+        for cam_time in camera_df['timestamp'][:100]:  # 采样前100个
+            nav_error = np.min(np.abs(nav_df['timestamp'] - cam_time))
+            sonar_error = np.min(np.abs(sonar_df['timestamp'] - cam_time))
+            sync_errors.extend([nav_error, sonar_error])
+            
+        self.report['synchronization']['mean_sync_error'] = np.mean(sync_errors)
+        self.report['synchronization']['max_sync_error'] = np.max(sync_errors)
+        
+        print(f"  - 共同时间范围: {self.report['synchronization']['common_duration']:.1f} 秒")
+        print(f"  - 平均同步误差: {self.report['synchronization']['mean_sync_error']:.3f} 秒")
+        
+    def analyze_quality(self):
+        """分析数据质量"""
+        print("\n分析数据质量...")
+        
+        # 相机图像质量（采样分析）
+        camera_dir = os.path.join(self.dataset_path, 'camera')
+        camera_csv = pd.read_csv(os.path.join(self.dataset_path, 'camera.csv'))
+        
+        sharpness_scores = []
+        contrast_scores = []
+        
+        sample_size = min(50, len(camera_csv))
+        print("  分析图像质量...")
+        
+        for idx in tqdm(np.linspace(0, len(camera_csv)-1, sample_size, dtype=int)):
+            filename = camera_csv.iloc[idx]['filename']
+            img_path = os.path.join(camera_dir, filename)
+            
+            if os.path.exists(img_path):
+                img = cv2.imread(img_path, cv2.IMREAD_GRAYSCALE)
+                if img is not None:
+                    # 计算拉普拉斯方差（清晰度）
+                    laplacian = cv2.Laplacian(img, cv2.CV_64F)
+                    sharpness = laplacian.var()
+                    sharpness_scores.append(sharpness)
+                    
+                    # 计算对比度
+                    contrast = img.std()
+                    contrast_scores.append(contrast)
+                    
+        self.report['quality_metrics']['camera_sharpness'] = {
+            'mean': np.mean(sharpness_scores),
+            'std': np.std(sharpness_scores),
+            'min': np.min(sharpness_scores),
+            'max': np.max(sharpness_scores)
+        }
+        
+        self.report['quality_metrics']['camera_contrast'] = {
+            'mean': np.mean(contrast_scores),
+            'std': np.std(contrast_scores),
+            'min': np.min(contrast_scores),
+            'max': np.max(contrast_scores)
+        }
+        
+        print(f"  - 平均清晰度: {np.mean(sharpness_scores):.2f}")
+        print(f"  - 平均对比度: {np.mean(contrast_scores):.2f}")
+        
+    def generate_report(self):
+        """生成分析报告"""
+        # 保存 JSON 报告
+        report_path = os.path.join(self.dataset_path, 'dataset_analysis.json')
+        with open(report_path, 'w') as f:
+            json.dump(self.report, f, indent=2)
+        print(f"\n分析报告已保存到: {report_path}")
+        
+        # 生成可视化
+        self.generate_visualizations()
+        
+    def generate_visualizations(self):
+        """生成可视化图表"""
+        print("\n生成可视化...")
+        
+        # 创建图表
+        fig, axes = plt.subplots(2, 2, figsize=(12, 10))
+        fig.suptitle('AUV Dataset Analysis', fontsize=16)
+        
+        # 1. 数据频率对比
+        ax = axes[0, 0]
+        modalities = ['Navigation', 'Camera', 'Sonar']
+        frequencies = [
+            self.report.get('navigation', {}).get('frequency_hz', 0),
+            self.report.get('camera', {}).get('frequency_hz', 0),
+            self.report.get('sonar', {}).get('frequency_hz', 0)
+        ]
+        ax.bar(modalities, frequencies)
+        ax.set_ylabel('Frequency (Hz)')
+        ax.set_title('Data Acquisition Frequency')
+        
+        # 2. 轨迹图（如果有经纬度数据）
+        ax = axes[0, 1]
+        nav_df = pd.read_csv(os.path.join(self.dataset_path, 'navigation.csv'))
+        if 'latitude' in nav_df.columns and 'longitude' in nav_df.columns:
+            ax.plot(nav_df['longitude'], nav_df['latitude'], 'b-', linewidth=0.5)
+            ax.set_xlabel('Longitude')
+            ax.set_ylabel('Latitude')
+            ax.set_title('Vehicle Trajectory')
+            ax.axis('equal')
+        
+        # 3. 深度剖面
+        ax = axes[1, 0]
+        if 'depth' in nav_df.columns and 'timestamp' in nav_df.columns:
+            ax.plot(nav_df['timestamp'], nav_df['depth'], 'r-')
+            ax.set_xlabel('Time (s)')
+            ax.set_ylabel('Depth (m)')
+            ax.set_title('Depth Profile')
+            ax.invert_yaxis()
+            
+        # 4. 速度分布
+        ax = axes[1, 1]
+        if all(col in nav_df.columns for col in ['velocity_x', 'velocity_y', 'velocity_z']):
+            speeds = np.sqrt(nav_df['velocity_x']**2 + 
+                           nav_df['velocity_y']**2 + 
+                           nav_df['velocity_z']**2)
+            ax.hist(speeds, bins=50, alpha=0.7, color='green')
+            ax.set_xlabel('Speed (m/s)')
+            ax.set_ylabel('Count')
+            ax.set_title('Vehicle Speed Distribution')
+            
+        plt.tight_layout()
+        
+        # 保存图表
+        viz_path = os.path.join(self.dataset_path, 'dataset_analysis.png')
+        plt.savefig(viz_path, dpi=150)
+        print(f"可视化已保存到: {viz_path}")
+        
+        plt.close()
+
+def main():
+    parser = argparse.ArgumentParser(description='分析 AUV 数据集')
+    parser.add_argument('dataset_path', help='数据集路径')
+    parser.add_argument('--verbose', '-v', action='store_true', 
+                       help='显示详细信息')
+    
+    args = parser.parse_args()
+    
+    # 检查路径
+    if not os.path.exists(args.dataset_path):
+        print(f"错误：数据集路径不存在: {args.dataset_path}")
+        return 1
+        
+    # 执行分析
+    analyzer = DatasetAnalyzer(args.dataset_path)
+    success = analyzer.analyze()
+    
+    return 0 if success else 1
+
+if __name__ == '__main__':
+    exit(main())

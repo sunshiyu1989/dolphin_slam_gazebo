@@ -1,0 +1,7 @@
+# 保存地图服务
+string filename
+---
+bool success
+string message
+int32 num_experiences
+int32 num_connections

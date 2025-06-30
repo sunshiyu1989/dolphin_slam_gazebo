@@ -1,0 +1,1 @@
+/home/parallels/dolphin_slam_ws/build/dolphin_slam/launch/dolphin_slam_sim_launch.py

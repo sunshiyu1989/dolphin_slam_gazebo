@@ -1,0 +1,8 @@
+[console_scripts]
+dataset_player_node = dolphin_slam.dataset_player_node:main
+experience_map_node = dolphin_slam.experience_map_node:main
+image_processing_node = dolphin_slam.image_processing_node:main
+local_view_node = dolphin_slam.local_view_node:main
+place_cell_node = dolphin_slam.place_cell_node:main
+robot_state_node = dolphin_slam.robot_state_node:main
+

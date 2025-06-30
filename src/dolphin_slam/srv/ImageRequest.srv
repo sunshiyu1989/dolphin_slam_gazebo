@@ -1,0 +1,6 @@
+# 请求特定序列号的图像
+int32 seq
+---
+sensor_msgs/Image image
+bool success
+string message

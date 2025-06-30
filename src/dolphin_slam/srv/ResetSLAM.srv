@@ -1,0 +1,7 @@
+# 重置 SLAM 系统
+bool clear_map
+bool reset_position
+geometry_msgs/Pose initial_pose
+---
+bool success
+string message

@@ -1,0 +1,477 @@
+#!/usr/bin/env python3
+"""
+Dolphin SLAM - 位置细胞网络 ROS2 节点
+实现基于神经网络的空间表征
+"""
+
+import rclpy
+from rclpy.node import Node
+from nav_msgs.msg import Odometry
+from geometry_msgs.msg import Twist, Odometry
+from sensor_msgs.msg import PointCloud2, PointField
+from std_msgs.msg import Header, Float32MultiArray
+from visualization_msgs.msg import Marker, MarkerArray
+import numpy as np
+import struct
+from typing import Optional, Tuple
+
+# 导入核心模块
+from dolphin_slam.place_cell_network import PlaceCellNetwork
+
+# 导入自定义消息（需要先生成）
+# from dolphin_slam.msg import PlaceCellActivity, LocalViewMatch
+
+class PlaceCellNode(Node):
+    """位置细胞网络 ROS2 节点"""
+    
+    def __init__(self):
+        super().__init__('place_cell_node')
+        
+        # 声明参数
+        self.declare_parameters(
+            namespace='',
+            parameters=[
+                ('neurons_per_dimension', 20),
+                ('neurons_step', 0.2),
+                ('recurrent_connection_std', 3.0),
+                ('input_learning_rate', 0.1),
+                ('min_input_age', 10),
+                ('weight_function', 'mexican_hat'),
+                ('global_inhibition', 0.001),
+                ('activation_threshold', 0.1),
+                ('odometry_topic', '/robot/odometry'),
+                ('visual_match_topic', '/local_view/matches'),
+                ('activity_topic', '/place_cells/activity'),
+                ('update_rate', 10.0),  # Hz
+            ]
+        )
+        
+        # 获取参数
+        self.neurons_per_dim = self.get_parameter('neurons_per_dimension').value
+        self.neurons_step = self.get_parameter('neurons_step').value
+        self.recurrent_conn_std = self.get_parameter('recurrent_connection_std').value
+        self.input_learning_rate = self.get_parameter('input_learning_rate').value
+        self.min_input_age = self.get_parameter('min_input_age').value
+        self.weight_function = self.get_parameter('weight_function').value
+        self.update_rate = self.get_parameter('update_rate').value
+        
+        # 初始化位置细胞网络
+        self.pc_network = PlaceCellNetwork(
+            neurons_per_dim=self.neurons_per_dim,
+            neurons_step=self.neurons_step,
+            recurrent_conn_std=self.recurrent_conn_std,
+            input_learning_rate=self.input_learning_rate,
+            min_input_age=self.min_input_age,
+            weight_function=self.weight_function
+        )
+        
+        # 状态变量
+        self.last_odometry: Optional[Odometry] = None
+        self.last_update_time: Optional[float] = None
+        self.current_velocity = np.zeros(3)
+        self.current_yaw_rate = 0.0
+        
+        # 订阅者
+        self.odometry_sub = self.create_subscription(
+            Odometry,
+            self.get_parameter('odometry_topic').value,
+            self.odometry_callback,
+            10
+        )
+        
+        # 也支持 Odometry（用于数据集播放）
+        self.pose_sub = self.create_subscription(
+            Odometry,
+            self.get_parameter('odometry_topic').value,
+            self.pose_callback,
+            10
+        )
+        
+        self.visual_match_sub = self.create_subscription(
+            Float32MultiArray,  # 临时使用，应该是 LocalViewMatch
+            self.get_parameter('visual_match_topic').value,
+            self.visual_match_callback,
+            10
+        )
+        
+        # 发布者
+        # 位置细胞活动（简化版）
+        self.activity_pub = self.create_publisher(
+            Float32MultiArray,
+            self.get_parameter('activity_topic').value,
+            10
+        )
+        
+        # 活动点云（用于 3D 可视化）
+        self.activity_cloud_pub = self.create_publisher(
+            PointCloud2,
+            '/place_cells/activity_cloud',
+            10
+        )
+        
+        # 峰值位置标记
+        self.peak_marker_pub = self.create_publisher(
+            Marker,
+            '/place_cells/peak_marker',
+            10
+        )
+        
+        # 活动切片（2D 可视化）
+        self.activity_slice_pub = self.create_publisher(
+            MarkerArray,
+            '/place_cells/activity_slice',
+            10
+        )
+        
+        # 统计信息
+        self.stats_pub = self.create_publisher(
+            MarkerArray,
+            '/place_cells/statistics',
+            10
+        )
+        
+        # 定时器
+        self.update_timer = self.create_timer(
+            1.0 / self.update_rate,
+            self.update_network
+        )
+        
+        self.viz_timer = self.create_timer(0.5, self.publish_visualizations)
+        self.stats_timer = self.create_timer(2.0, self.publish_statistics)
+        
+        # 初始化网络
+        self.pc_network.reset()
+        
+        self.get_logger().info(
+            f'位置细胞网络节点已启动: {self.neurons_per_dim}³ 神经元, '
+            f'步长 {self.neurons_step}m'
+        )
+        
+    def odometry_callback(self, msg: Odometry):
+        """处理里程计数据"""
+        # 提取线速度
+        self.current_velocity = np.array([
+            msg.twist.twist.linear.x,
+            msg.twist.twist.linear.y,
+            msg.twist.twist.linear.z
+        ])
+        
+        # 提取角速度
+        self.current_yaw_rate = msg.twist.twist.angular.z
+        
+        # 更新时间戳
+        stamp = msg.header.stamp
+        current_time = stamp.sec + stamp.nanosec * 1e-9
+        
+        if self.last_update_time is not None:
+            dt = current_time - self.last_update_time
+            if dt > 0:
+                # 路径积分更新
+                self.pc_network.path_integration_update(
+                    self.current_velocity,
+                    self.current_yaw_rate,
+                    dt
+                )
+                
+        self.last_update_time = current_time
+        self.last_odometry = msg
+        
+    def pose_callback(self, msg: Odometry):
+        """处理位姿数据（用于数据集）"""
+        # 从连续的位姿估计速度
+        stamp = msg.header.stamp
+        current_time = stamp.sec + stamp.nanosec * 1e-9
+        
+        if self.last_update_time is not None and self.last_odometry is not None:
+            dt = current_time - self.last_update_time
+            if dt > 0:
+                # 计算位置变化
+                dx = msg.pose.pose.position.x - self.last_odometry.pose.pose.position.x
+                dy = msg.pose.pose.position.y - self.last_odometry.pose.pose.position.y
+                dz = msg.pose.pose.position.z - self.last_odometry.pose.pose.position.z
+                
+                # 估计速度（简化：假设在机体坐标系）
+                self.current_velocity = np.array([dx/dt, dy/dt, dz/dt])
+                
+                # 估计偏航角速率
+                # TODO: 从四元数计算角度变化
+                self.current_yaw_rate = 0.0
+                
+        # 创建虚拟的 Odometry 消息
+        odom = Odometry()
+        odom.header = msg.header
+        odom.pose = msg.pose
+        odom.twist.twist.linear.x = self.current_velocity[0]
+        odom.twist.twist.linear.y = self.current_velocity[1]
+        odom.twist.twist.linear.z = self.current_velocity[2]
+        odom.twist.twist.angular.z = self.current_yaw_rate
+        
+        self.last_odometry = odom
+        self.last_update_time = current_time
+        
+    def visual_match_callback(self, msg: Float32MultiArray):
+        """处理视觉匹配结果"""
+        if len(msg.data) >= 2:
+            template_id = int(msg.data[0])
+            similarity = msg.data[1]
+            
+            # 更新位置细胞网络的视觉输入
+            self.pc_network.visual_input_update(template_id, similarity)
+            
+            self.get_logger().debug(
+                f'视觉输入: 模板 {template_id}, 相似度 {similarity:.3f}'
+            )
+            
+    def update_network(self):
+        """更新网络状态"""
+        # 应用递归动力学
+        self.pc_network.apply_recurrent_dynamics()
+        
+        # 发布当前活动状态
+        self.publish_activity()
+        
+    def publish_activity(self):
+        """发布位置细胞活动"""
+        # 获取活动信息
+        peak_pos = self.pc_network.get_peak_activity()
+        center_pos = self.pc_network.get_activity_center()
+        peak_value = np.max(self.pc_network.activity)
+        
+        # 使用 Float32MultiArray 临时代替自定义消息
+        msg = Float32MultiArray()
+        
+        # 添加元数据
+        msg.data = [
+            float(self.neurons_per_dim),  # 形状
+            float(self.neurons_per_dim),
+            float(self.neurons_per_dim),
+            float(peak_pos[0]),  # 峰值位置
+            float(peak_pos[1]),
+            float(peak_pos[2]),
+            peak_value,  # 峰值强度
+            center_pos[0],  # 质心位置
+            center_pos[1],
+            center_pos[2]
+        ]
+        
+        # 添加展平的活动数据（采样以减少数据量）
+        # 每隔 n 个点采样一次
+        stride = 4
+        sampled_activity = self.pc_network.activity[::stride, ::stride, ::stride]
+        msg.data.extend(sampled_activity.flatten().tolist())
+        
+        self.activity_pub.publish(msg)
+        
+    def publish_visualizations(self):
+        """发布可视化数据"""
+        # 发布活动点云
+        self.publish_activity_cloud()
+        
+        # 发布峰值标记
+        self.publish_peak_marker()
+        
+        # 发布活动切片
+        self.publish_activity_slice()
+        
+    def publish_activity_cloud(self):
+        """发布位置细胞活动的点云"""
+        # 创建点云消息
+        cloud = PointCloud2()
+        cloud.header.frame_id = "map"
+        cloud.header.stamp = self.get_clock().now().to_msg()
+        
+        # 获取活跃的细胞
+        activity = self.pc_network.activity
+        threshold = np.max(activity) * 0.1  # 只显示 > 10% 最大值的细胞
+        active_cells = np.where(activity > threshold)
+        
+        if len(active_cells[0]) == 0:
+            return
+            
+        # 准备点云数据
+        points = []
+        for i in range(len(active_cells[0])):
+            x_idx = active_cells[0][i]
+            y_idx = active_cells[1][i]
+            z_idx = active_cells[2][i]
+            
+            # 转换到世界坐标
+            x = (x_idx - self.neurons_per_dim//2) * self.neurons_step
+            y = (y_idx - self.neurons_per_dim//2) * self.neurons_step
+            z = (z_idx - self.neurons_per_dim//2) * self.neurons_step
+            
+            # 强度
+            intensity = activity[x_idx, y_idx, z_idx]
+            
+            # 打包点数据
+            points.append([x, y, z, intensity])
+            
+        # 设置点云字段
+        cloud.fields = [
+            PointField(name='x', offset=0, datatype=PointField.FLOAT32, count=1),
+            PointField(name='y', offset=4, datatype=PointField.FLOAT32, count=1),
+            PointField(name='z', offset=8, datatype=PointField.FLOAT32, count=1),
+            PointField(name='intensity', offset=12, datatype=PointField.FLOAT32, count=1),
+        ]
+        
+        cloud.is_bigendian = False
+        cloud.point_step = 16
+        cloud.row_step = cloud.point_step * len(points)
+        cloud.height = 1
+        cloud.width = len(points)
+        cloud.is_dense = True
+        
+        # 打包数据
+        cloud.data = b''
+        for point in points:
+            cloud.data += struct.pack('ffff', *point)
+            
+        self.activity_cloud_pub.publish(cloud)
+        
+    def publish_peak_marker(self):
+        """发布峰值活动位置标记"""
+        peak_idx = self.pc_network.get_peak_activity()
+        peak_value = np.max(self.pc_network.activity)
+        
+        marker = Marker()
+        marker.header.frame_id = "map"
+        marker.header.stamp = self.get_clock().now().to_msg()
+        marker.ns = "peak_activity"
+        marker.id = 0
+        marker.type = Marker.SPHERE
+        marker.action = Marker.ADD
+        
+        # 位置
+        marker.pose.position.x = (peak_idx[0] - self.neurons_per_dim//2) * self.neurons_step
+        marker.pose.position.y = (peak_idx[1] - self.neurons_per_dim//2) * self.neurons_step
+        marker.pose.position.z = (peak_idx[2] - self.neurons_per_dim//2) * self.neurons_step
+        marker.pose.orientation.w = 1.0
+        
+        # 大小（根据活动强度）
+        scale = 0.5 + peak_value * 2.0
+        marker.scale.x = scale
+        marker.scale.y = scale
+        marker.scale.z = scale
+        
+        # 颜色
+        marker.color.r = 1.0
+        marker.color.g = 0.0
+        marker.color.b = 0.0
+        marker.color.a = 0.8
+        
+        self.peak_marker_pub.publish(marker)
+        
+    def publish_activity_slice(self):
+        """发布活动的 2D 切片"""
+        # 获取 XY 平面的切片（在峰值 Z 位置）
+        peak_idx = self.pc_network.get_peak_activity()
+        slice_data = self.pc_network.get_activity_slice(axis=2, index=peak_idx[2])
+        
+        marker_array = MarkerArray()
+        
+        # 创建网格标记
+        for i in range(slice_data.shape[0]):
+            for j in range(slice_data.shape[1]):
+                if slice_data[i, j] > 0.01:  # 只显示有意义的活动
+                    marker = Marker()
+                    marker.header.frame_id = "map"
+                    marker.header.stamp = self.get_clock().now().to_msg()
+                    marker.ns = "activity_slice"
+                    marker.id = i * slice_data.shape[1] + j
+                    marker.type = Marker.CUBE
+                    marker.action = Marker.ADD
+                    
+                    # 位置
+                    marker.pose.position.x = (i - self.neurons_per_dim//2) * self.neurons_step
+                    marker.pose.position.y = (j - self.neurons_per_dim//2) * self.neurons_step
+                    marker.pose.position.z = -1.0  # 在地面下方显示
+                    marker.pose.orientation.w = 1.0
+                    
+                    # 大小
+                    marker.scale.x = self.neurons_step * 0.8
+                    marker.scale.y = self.neurons_step * 0.8
+                    marker.scale.z = 0.1
+                    
+                    # 颜色（热力图）
+                    intensity = slice_data[i, j] / np.max(slice_data)
+                    marker.color.r = intensity
+                    marker.color.g = 1.0 - intensity
+                    marker.color.b = 0.0
+                    marker.color.a = 0.7
+                    
+                    marker.lifetime = rclpy.duration.Duration(seconds=1.0).to_msg()
+                    
+                    marker_array.markers.append(marker)
+                    
+        self.activity_slice_pub.publish(marker_array)
+        
+    def publish_statistics(self):
+        """发布统计信息"""
+        # 计算统计数据
+        peak_value = np.max(self.pc_network.activity)
+        mean_activity = np.mean(self.pc_network.activity)
+        active_cells = np.sum(self.pc_network.activity > 0.01)
+        total_cells = self.neurons_per_dim ** 3
+        
+        peak_pos = self.pc_network.get_peak_activity()
+        center_pos = self.pc_network.get_activity_center()
+        
+        marker_array = MarkerArray()
+        
+        # 创建文本标记
+        marker = Marker()
+        marker.header.frame_id = "map"
+        marker.header.stamp = self.get_clock().now().to_msg()
+        marker.ns = "statistics"
+        marker.id = 0
+        marker.type = Marker.TEXT_VIEW_FACING
+        marker.action = Marker.ADD
+        
+        marker.pose.position.x = 5.0
+        marker.pose.position.y = 0.0
+        marker.pose.position.z = 5.0
+        marker.pose.orientation.w = 1.0
+        
+        marker.scale.z = 0.5
+        
+        marker.color.r = 1.0
+        marker.color.g = 1.0
+        marker.color.b = 1.0
+        marker.color.a = 1.0
+        
+        # 统计文本
+        marker.text = (
+            f"位置细胞网络统计\n"
+            f"================\n"
+            f"网络大小: {self.neurons_per_dim}×{self.neurons_per_dim}×{self.neurons_per_dim}\n"
+            f"峰值活动: {peak_value:.3f}\n"
+            f"平均活动: {mean_activity:.3f}\n"
+            f"活跃细胞: {active_cells}/{total_cells} ({active_cells/total_cells*100:.1f}%)\n"
+            f"峰值位置: ({peak_pos[0]}, {peak_pos[1]}, {peak_pos[2]})\n"
+            f"质心位置: ({center_pos[0]:.1f}, {center_pos[1]:.1f}, {center_pos[2]:.1f})"
+        )
+        
+        marker_array.markers.append(marker)
+        self.stats_pub.publish(marker_array)
+        
+        # 输出到日志
+        self.get_logger().info(
+            f"PC 统计 - 峰值: {peak_value:.3f}, 活跃: {active_cells}/{total_cells}"
+        )
+
+def main(args=None):
+    rclpy.init(args=args)
+    
+    try:
+        node = PlaceCellNode()
+        rclpy.spin(node)
+    except KeyboardInterrupt:
+        pass
+    except Exception as e:
+        print(f'错误: {e}')
+    finally:
+        if rclpy.ok():
+            rclpy.shutdown()
+
+if __name__ == '__main__':
+    main()

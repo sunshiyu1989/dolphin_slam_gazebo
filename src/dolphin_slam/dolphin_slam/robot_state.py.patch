@@ -1,0 +1,18 @@
+--- a/robot_state.py
++++ b/robot_state.py
+@@ -95,6 +95,15 @@ class RobotState:
+         try:
+             self.navigation_data = pd.read_csv(csv_path)
+             self.logger.info(f"加载了 {len(self.navigation_data)} 条导航记录")
++            
++            # 强制转换数据类型为float
++            numeric_columns = ['latitude', 'longitude', 'altitude', 'depth', 
++                             'yaw', 'pitch', 'roll', 'velocity_x', 'velocity_y', 'velocity_z']
++            for col in numeric_columns:
++                if col in self.navigation_data.columns:
++                    self.navigation_data[col] = pd.to_numeric(self.navigation_data[col], errors='coerce')
++            
++            self.logger.info("数据类型转换完成")
+             
+             # 验证必要的列
+             required_columns = ['timestamp', 'latitude', 'longitude', 'altitude',
