@@ -212,38 +212,46 @@ class ImageProcessingNode(Node):
         self.descriptors_pub.publish(desc_msg)
         
     def publish_keypoint_markers(self, keypoints, header: Header, source: str):
-        """发布特征点的可视化标记"""
+        """发布特征点的可视化标记 - 修复版本"""
         marker_array = MarkerArray()
         
-        # 清除旧标记
+        # 1. 首先清除所有旧标记
         delete_marker = Marker()
         delete_marker.header = header
         delete_marker.ns = f"{source}_keypoints"
         delete_marker.action = Marker.DELETEALL
         marker_array.markers.append(delete_marker)
         
-        # 添加新标记
+        # 2. 为每个特征点创建唯一 ID 的标记
         for i, kp in enumerate(keypoints):
             marker = Marker()
             marker.header = header
             marker.ns = f"{source}_keypoints"
-            marker.id = i
+            
+            # 确保不同来源的 marker 有不同的 ID 范围
+            if source == 'camera':
+                marker.id = i  # camera: 0-999
+            elif source == 'sonar':
+                marker.id = i + 1000  # sonar: 1000-1999
+            else:
+                marker.id = i + 2000  # 其他: 2000+
+                
             marker.type = Marker.SPHERE
             marker.action = Marker.ADD
             
-            # 位置（归一化到米）
-            marker.pose.position.x = kp.pt[0] / 1000.0  # 假设像素到米的转换
+            # 位置设置
+            marker.pose.position.x = kp.pt[0] / 1000.0
             marker.pose.position.y = kp.pt[1] / 1000.0
             marker.pose.position.z = 0.0
             marker.pose.orientation.w = 1.0
             
-            # 大小
-            scale = kp.size / 100.0  # 根据特征大小调整
-            marker.scale.x = max(0.01, scale)
-            marker.scale.y = max(0.01, scale)
-            marker.scale.z = max(0.01, scale)
+            # 大小设置
+            scale = max(0.01, kp.size / 100.0)
+            marker.scale.x = scale
+            marker.scale.y = scale
+            marker.scale.z = scale
             
-            # 颜色
+            # 颜色区分
             if source == 'camera':
                 marker.color.r = 0.0
                 marker.color.g = 1.0
@@ -252,12 +260,29 @@ class ImageProcessingNode(Node):
                 marker.color.r = 1.0
                 marker.color.g = 0.5
                 marker.color.b = 0.0
-            marker.color.a = 0.7
+            marker.color.a = 0.8
             
-            marker.lifetime = rclpy.duration.Duration(seconds=0.5).to_msg()
+            # 设置生命周期
+            marker.lifetime = rclpy.duration.Duration(seconds=1.0).to_msg()
             
             marker_array.markers.append(marker)
-            
+        
+        # 3. 发布前检查重复 ID
+        ids_seen = set()
+        clean_markers = []
+        
+        for marker in marker_array.markers:
+            if marker.action == Marker.DELETEALL:
+                clean_markers.append(marker)
+            else:
+                key = (marker.ns, marker.id)
+                if key not in ids_seen:
+                    ids_seen.add(key)
+                    clean_markers.append(marker)
+                else:
+                    self.get_logger().warn(f"跳过重复的 marker: ns={marker.ns}, id={marker.id}")
+        
+        marker_array.markers = clean_markers
         self.keypoints_pub.publish(marker_array)
 
 def main(args=None):
