@@ -12,15 +12,21 @@ setup(
         ('share/ament_index/resource_index/packages',
             ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml']),
-        # Include all launch files
+        # Include all launch files (更宽泛的模式以包含所有.py launch文件)
         (os.path.join('share', package_name, 'launch'), 
-            glob(os.path.join('launch', '*launch.[pxy][yma]*'))),
+            glob(os.path.join('launch', '*.py'))),
+        # 也包含.yaml launch文件
+        (os.path.join('share', package_name, 'launch'), 
+            glob(os.path.join('launch', '*.yaml'))),
         # Include all config files
         (os.path.join('share', package_name, 'config'),
             glob(os.path.join('config', '*.yaml'))),
         # Include rviz config files
         (os.path.join('share', package_name, 'rviz'),
             glob(os.path.join('rviz', '*.rviz'))),
+        # Include scripts
+        (os.path.join('share', package_name, 'scripts'),
+            glob(os.path.join('scripts', '*.py'))),
     ],
     install_requires=['setuptools'],
     zip_safe=True,
@@ -37,6 +43,10 @@ setup(
             'experience_map_node = dolphin_slam.experience_map_node:main',
             'robot_state_node = dolphin_slam.robot_state_node:main',
             'dataset_player_node = dolphin_slam.dataset_player_node:main',
+            # 添加图像同步节点
+            'image_sync_node = dolphin_slam.image_sync_node:main',
+            'unified_data_controller = dolphin_slam.unified_data_controller:main',
+            'system_stop_monitor = dolphin_slam.system_stop_monitor:main',
         ],
     },
 )

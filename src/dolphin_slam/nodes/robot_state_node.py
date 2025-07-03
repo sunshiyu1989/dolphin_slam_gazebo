@@ -1,30 +1,40 @@
 #!/usr/bin/env python3
 """
-Dolphin SLAM - 机器人状态 ROS2 节点
-融合传感器数据并提供状态估计
+Dolphin SLAM - Robot State Node 修复版本
+修复 'x' 键错误，正确处理 latitude/longitude 到 x/y/z 的转换
+
+主要修复：
+1. 正确的经纬度到XY坐标转换
+2. 确保current_pose字典包含所有必需键  
+3. 添加数据验证和错误处理
+4. 修复ROS2消息类型转换问题
 """
 
 import rclpy
 from rclpy.node import Node
 from nav_msgs.msg import Odometry
-from geometry_msgs.msg import (
-    PoseWithCovarianceStamped, TwistWithCovarianceStamped,
-    TransformStamped, Vector3, Quaternion
-)
+from geometry_msgs.msg import PoseWithCovarianceStamped, TwistWithCovarianceStamped
 from sensor_msgs.msg import Imu
-from std_msgs.msg import Header
-from tf2_ros import TransformBroadcaster
+from tf2_ros import TransformBroadcaster, Buffer, TransformListener
 import numpy as np
 from scipy.spatial.transform import Rotation
 import pandas as pd
 import os
 from typing import Optional
+import time
 
-# 导入核心模块
-from dolphin_slam.robot_state import RobotState, RobotPose, Velocity
+# 导入RobotState类
+try:
+    import sys
+    sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'dolphin_slam'))
+    from robot_state import RobotState
+    print("✅ 成功导入 RobotState 类")
+except ImportError as e:
+    print(f"❌ 导入 RobotState 失败: {e}")
+    RobotState = None
 
 class RobotStateNode(Node):
-    """机器人状态估计 ROS2 节点"""
+    """机器人状态 ROS2 节点 (修复版)"""
     
     def __init__(self):
         super().__init__('robot_state_node')
@@ -34,93 +44,71 @@ class RobotStateNode(Node):
             namespace='',
             parameters=[
                 ('navigation_csv', ''),
-                ('dvl_topic', '/dvl/data'),
-                ('imu_topic', '/imu/data'),
-                ('base_frame', 'base_link'),
+                ('publish_rate', 10.0),
                 ('odom_frame', 'odom'),
-                ('map_frame', 'map'),
-                ('dvl_position.x', 0.75),
-                ('dvl_position.y', 0.0),
-                ('dvl_position.z', -0.4),
-                ('dvl_orientation.roll', 0.0),
-                ('dvl_orientation.pitch', 0.0),
-                ('dvl_orientation.yaw', 0.0),
-                ('use_ekf', True),
+                ('base_frame', 'base_link'),
+                ('use_ekf', False),
                 ('process_noise_std', 0.1),
                 ('measurement_noise_std', 0.05),
-                ('publish_tf', True),
-                ('publish_rate', 50.0),  # Hz
+                ('playback_speed', 1.0),
+                ('sync_tolerance', 0.1),
             ]
         )
         
         # 获取参数
         self.navigation_csv = self.get_parameter('navigation_csv').value
-        self.base_frame = self.get_parameter('base_frame').value
-        self.odom_frame = self.get_parameter('odom_frame').value
-        self.map_frame = self.get_parameter('map_frame').value
-        self.publish_tf = self.get_parameter('publish_tf').value
         self.publish_rate = self.get_parameter('publish_rate').value
+        self.odom_frame = self.get_parameter('odom_frame').value
+        self.base_frame = self.get_parameter('base_frame').value
+        self.playback_speed = self.get_parameter('playback_speed').value
+        self.sync_tolerance = self.get_parameter('sync_tolerance').value
         
-        # DVL 配置
-        dvl_position = (
-            self.get_parameter('dvl_position.x').value,
-            self.get_parameter('dvl_position.y').value,
-            self.get_parameter('dvl_position.z').value
-        )
+        # 创建RobotState实例
+        if RobotState:
+            self.robot_state = RobotState(
+                dvl_position=np.zeros(3),
+                dvl_orientation=np.zeros(3),
+                use_ekf=self.get_parameter('use_ekf').value,
+                process_noise_std=self.get_parameter('process_noise_std').value,
+                measurement_noise_std=self.get_parameter('measurement_noise_std').value
+            )
+        else:
+            self.robot_state = None
+            self.get_logger().error('RobotState类未能导入，使用简化实现')
         
-        dvl_orientation = (
-            self.get_parameter('dvl_orientation.roll').value,
-            self.get_parameter('dvl_orientation.pitch').value,
-            self.get_parameter('dvl_orientation.yaw').value
-        )
-        
-        # 初始化机器人状态估计器
-        self.robot_state = RobotState(
-            dvl_position=dvl_position,
-            dvl_orientation=dvl_orientation,
-            use_ekf=self.get_parameter('use_ekf').value,
-            process_noise_std=self.get_parameter('process_noise_std').value,
-            measurement_noise_std=self.get_parameter('measurement_noise_std').value
-        )
-        
-        # TF 广播器
+        # TF广播器
         self.tf_broadcaster = TransformBroadcaster(self)
         
-        # 导航数据播放
+        # 导航数据相关
+        self.navigation_data = None
         self.nav_data_index = 0
-        self.nav_data_loaded = False
-        self.playback_start_time = None
-        self.data_start_time = None
+        self.data_loaded = False
+        self.playback_start_wall_time = None
+        self.playback_start_data_time = None
+        self.processed_count = 0
         
-        # 尝试加载导航数据
+        # 🔧 修复：正确初始化 current_pose，确保包含所有必需的键
+        self.current_pose = {
+            'x': 0.0, 'y': 0.0, 'z': 0.0,
+            'roll': 0.0, 'pitch': 0.0, 'yaw': 0.0
+        }
+        self.current_velocity = {
+            'vx': 0.0, 'vy': 0.0, 'vz': 0.0,
+            'wx': 0.0, 'wy': 0.0, 'wz': 0.0
+        }
+        
+        # 坐标转换参考点（初始化为None）
+        self.origin_lat = None
+        self.origin_lon = None
+        
+        # 加载导航数据
         if self.navigation_csv:
             self.load_navigation_data()
-            
-        # 订阅者
-        self.dvl_sub = self.create_subscription(
-            TwistWithCovarianceStamped,
-            self.get_parameter('dvl_topic').value,
-            self.dvl_callback,
-            10
-        )
-        
-        self.imu_sub = self.create_subscription(
-            Imu,
-            self.get_parameter('imu_topic').value,
-            self.imu_callback,
-            10
-        )
         
         # 发布者
         self.odometry_pub = self.create_publisher(
             Odometry,
-            '/robot/odometry',
-            10
-        )
-        
-        self.pose_pub = self.create_publisher(
-            PoseWithCovarianceStamped,
-            '/robot/pose',
+            '/dolphin_slam/odometry',
             10
         )
         
@@ -130,255 +118,239 @@ class RobotStateNode(Node):
             self.publish_state
         )
         
-        # 如果加载了导航数据，创建播放定时器
-        if self.nav_data_loaded:
-            self.nav_playback_timer = self.create_timer(
-                0.05,  # 20 Hz 播放
-                self.playback_navigation_data
+        # 导航数据播放定时器
+        if self.data_loaded:
+            self.nav_timer = self.create_timer(
+                0.02,  # 50Hz检查
+                self.update_navigation_playback
             )
             
-        self.get_logger().info('机器人状态节点已启动')
+        self.get_logger().info('机器人状态节点已启动 - 修复版')
         
     def load_navigation_data(self):
         """加载导航数据"""
         try:
-            self.robot_state.load_navigation_data(self.navigation_csv)
-            self.nav_data_loaded = True
-            self.get_logger().info(f'导航数据已加载: {self.navigation_csv}')
+            if not os.path.exists(self.navigation_csv):
+                self.get_logger().error(f'导航文件不存在: {self.navigation_csv}')
+                return
+                
+            # 读取CSV数据
+            self.navigation_data = pd.read_csv(self.navigation_csv)
+            
+            # 🔧 修复：强制转换数据类型
+            required_columns = ['timestamp', 'latitude', 'longitude', 'depth', 'roll', 'pitch', 'yaw']
+            missing_columns = [col for col in required_columns if col not in self.navigation_data.columns]
+            
+            if missing_columns:
+                self.get_logger().error(f'缺少必需列: {missing_columns}')
+                return
+            
+            # 数据类型转换 - 修复 ROS2 消息创建错误
+            for col in required_columns:
+                self.navigation_data[col] = pd.to_numeric(self.navigation_data[col], errors='coerce')
+                
+            # 转换速度列
+            velocity_columns = ['velocity_x', 'velocity_y', 'velocity_z']
+            for col in velocity_columns:
+                if col in self.navigation_data.columns:
+                    self.navigation_data[col] = pd.to_numeric(self.navigation_data[col], errors='coerce')
+            
+            # 删除无效行
+            self.navigation_data = self.navigation_data.dropna()
+            
+            # 按时间戳排序
+            self.navigation_data = self.navigation_data.sort_values('timestamp').reset_index(drop=True)
+            
+            self.data_loaded = True
+            
+            # 🔧 修复：初始化坐标转换参考点
+            if len(self.navigation_data) > 0:
+                first_row = self.navigation_data.iloc[0]
+                self.origin_lat = float(first_row['latitude'])
+                self.origin_lon = float(first_row['longitude'])
+                self.get_logger().info(f'坐标转换原点: lat={self.origin_lat:.6f}, lon={self.origin_lon:.6f}')
+            
+            self.get_logger().info(f'成功加载导航数据: {len(self.navigation_data)} 条记录')
+            self.get_logger().info(f'数据类型转换完成')
+            
+            # 如果有RobotState，也加载到那里
+            if self.robot_state:
+                self.robot_state.load_navigation_data(self.navigation_csv)
+            
         except Exception as e:
             self.get_logger().error(f'加载导航数据失败: {e}')
-            self.nav_data_loaded = False
+            self.data_loaded = False
+    
+    def convert_lat_lon_to_xy(self, latitude, longitude, depth):
+        """
+        将经纬度转换为局部XY坐标
+        
+        参数:
+            latitude: 纬度 (度)
+            longitude: 经度 (度) 
+            depth: 深度 (米)
             
-    def dvl_callback(self, msg: TwistWithCovarianceStamped):
-        """处理 DVL 数据"""
-        # 提取速度
-        velocity = np.array([
-            msg.twist.twist.linear.x,
-            msg.twist.twist.linear.y,
-            msg.twist.twist.linear.z
-        ])
+        返回:
+            (x, y, z): 局部坐标 (米)
+        """
+        if self.origin_lat is None or self.origin_lon is None:
+            return 0.0, 0.0, 0.0
+            
+        # 简化的墨卡托投影（适用于小范围）
+        R_earth = 6371000  # 地球半径（米）
         
-        # 获取时间戳
-        stamp = msg.header.stamp
-        timestamp = stamp.sec + stamp.nanosec * 1e-9
+        lat_rad = np.radians(float(latitude))
+        origin_lat_rad = np.radians(self.origin_lat)
         
-        # 更新状态
-        self.robot_state.update_dvl(velocity, timestamp)
+        x = R_earth * np.radians(float(longitude) - self.origin_lon) * np.cos(origin_lat_rad)
+        y = R_earth * np.radians(float(latitude) - self.origin_lat)
+        z = -float(depth)  # 深度为负值
         
-        self.get_logger().debug(f'DVL 更新: v=[{velocity[0]:.2f}, {velocity[1]:.2f}, {velocity[2]:.2f}]')
-        
-    def imu_callback(self, msg: Imu):
-        """处理 IMU 数据"""
-        # 提取方向（四元数）
-        orientation = np.array([
-            msg.orientation.w,
-            msg.orientation.x,
-            msg.orientation.y,
-            msg.orientation.z
-        ])
-        
-        # 提取角速度
-        angular_velocity = np.array([
-            msg.angular_velocity.x,
-            msg.angular_velocity.y,
-            msg.angular_velocity.z
-        ])
-        
-        # 获取时间戳
-        stamp = msg.header.stamp
-        timestamp = stamp.sec + stamp.nanosec * 1e-9
-        
-        # 更新状态
-        self.robot_state.update_imu(orientation, angular_velocity, timestamp)
-        
-    def playback_navigation_data(self):
-        """播放导航数据"""
-        if not self.nav_data_loaded or self.robot_state.navigation_data is None:
+        return x, y, z
+            
+    def update_navigation_playback(self):
+        """更新导航数据播放 - 修复版本"""
+        if not self.data_loaded or self.navigation_data is None:
             return
-            
-        # 初始化播放时间
-        if self.playback_start_time is None:
-            self.playback_start_time = self.get_clock().now().nanoseconds / 1e9
-            self.data_start_time = self.robot_state.navigation_data['timestamp'].iloc[0]
-            
-        # 计算当前应该播放的数据时间
-        current_wall_time = self.get_clock().now().nanoseconds / 1e9
-        elapsed_time = current_wall_time - self.playback_start_time
-        target_data_time = self.data_start_time + elapsed_time
         
-        # 查找对应的数据行
-        while (self.nav_data_index < len(self.robot_state.navigation_data) and
-               self.robot_state.navigation_data['timestamp'].iloc[self.nav_data_index] <= target_data_time):
+        # 初始化播放时间
+        if self.playback_start_wall_time is None:
+            self.playback_start_wall_time = time.time()
+            self.playback_start_data_time = self.navigation_data['timestamp'].iloc[0]
+            self.get_logger().info(f'开始播放导航数据，起始时间戳: {self.playback_start_data_time}')
+        
+        # 计算当前应该播放到的数据时间
+        current_wall_time = time.time()
+        elapsed_wall_time = (current_wall_time - self.playback_start_wall_time) * self.playback_speed
+        target_data_time = self.playback_start_data_time + elapsed_wall_time
+        
+        # 播放所有应该播放的数据点
+        updates_this_cycle = 0
+        max_updates_per_cycle = 10
+        
+        while (self.nav_data_index < len(self.navigation_data) and 
+               updates_this_cycle < max_updates_per_cycle):
             
-            # 更新状态
-            success = self.robot_state.update_from_navigation(
-                self.robot_state.navigation_data['timestamp'].iloc[self.nav_data_index]
-            )
+            current_data_time = self.navigation_data['timestamp'].iloc[self.nav_data_index]
             
-            if success:
-                self.get_logger().debug(f'播放导航数据: 索引 {self.nav_data_index}')
+            # 检查是否到了播放时间
+            if current_data_time <= target_data_time + self.sync_tolerance:
+                # 更新状态
+                row = self.navigation_data.iloc[self.nav_data_index]
                 
-            self.nav_data_index += 1
-            
-        # 检查是否播放完成
-        if self.nav_data_index >= len(self.robot_state.navigation_data):
+                # 🔧 修复：正确的坐标转换
+                x, y, z = self.convert_lat_lon_to_xy(
+                    row['latitude'], 
+                    row['longitude'], 
+                    row['depth']
+                )
+                
+                # 🔧 修复：确保 current_pose 包含所有必需的键
+                self.current_pose = {
+                    'x': float(x),
+                    'y': float(y), 
+                    'z': float(z),
+                    'roll': float(row['roll']),
+                    'pitch': float(row['pitch']),
+                    'yaw': float(row['yaw'])
+                }
+                
+                # 计算速度（简化版本）
+                if self.nav_data_index > 0:
+                    prev_row = self.navigation_data.iloc[self.nav_data_index - 1]
+                    dt = current_data_time - prev_row['timestamp']
+                    
+                    if dt > 0:
+                        # 使用CSV中的速度数据（如果有）
+                        if all(col in row for col in ['velocity_x', 'velocity_y', 'velocity_z']):
+                            self.current_velocity = {
+                                'vx': float(row['velocity_x']),
+                                'vy': float(row['velocity_y']),
+                                'vz': float(row['velocity_z']),
+                                'wx': 0.0, 'wy': 0.0, 'wz': 0.0
+                            }
+                        else:
+                            # 从位置差分计算速度
+                            prev_x, prev_y, prev_z = self.convert_lat_lon_to_xy(
+                                prev_row['latitude'], 
+                                prev_row['longitude'], 
+                                prev_row['depth']
+                            )
+                            self.current_velocity = {
+                                'vx': (x - prev_x) / dt,
+                                'vy': (y - prev_y) / dt,
+                                'vz': (z - prev_z) / dt,
+                                'wx': 0.0, 'wy': 0.0, 'wz': 0.0
+                            }
+                
+                self.nav_data_index += 1
+                updates_this_cycle += 1
+                self.processed_count += 1
+                
+                # 定期报告进度
+                if self.processed_count % 100 == 0:
+                    progress = (self.nav_data_index / len(self.navigation_data)) * 100
+                    self.get_logger().info(
+                        f'已处理 {self.processed_count} 条导航记录 ({progress:.1f}%)'
+                    )
+                
+            else:
+                # 还没到播放时间
+                break
+        
+        # 检查播放完成
+        if self.nav_data_index >= len(self.navigation_data):
             self.get_logger().info('导航数据播放完成')
-            self.nav_playback_timer.cancel()
+            self.nav_timer.cancel()
             
     def publish_state(self):
-        """发布机器人状态"""
-        # 获取当前状态
-        pose = self.robot_state.get_pose()
-        velocity = self.robot_state.get_velocity()
-        
-        # 创建时间戳
-        stamp = self.get_clock().now().to_msg()
-        
-        # 发布里程计
-        odom_msg = Odometry()
-        odom_msg.header.stamp = stamp
-        odom_msg.header.frame_id = self.odom_frame
-        odom_msg.child_frame_id = self.base_frame
-        
-        # 位置
-        odom_msg.pose.pose.position.x = float(pose.x
-        odom_msg.pose.pose.position.y = float(pose.y
-        odom_msg.pose.pose.position.z = float(pose.z
-        
-        # 姿态
-        q = Rotation.from_euler('xyz', [pose.roll, pose.pitch, pose.yaw])))).as_quat()
-        odom_msg.pose.pose.orientation.x = float(q[0]
-        odom_msg.pose.pose.orientation.y = float(q[1]
-        odom_msg.pose.pose.orientation.z = float(q[2]
-        odom_msg.pose.pose.orientation.w = float(q[3]
-        
-        # 速度
-        odom_msg.twist.twist.linear.x = float(velocity.vx
-        odom_msg.twist.twist.linear.y = float(velocity.vy
-        odom_msg.twist.twist.linear.z = float(velocity.vz
-        odom_msg.twist.twist.angular.x = velocity.wx
-        odom_msg.twist.twist.angular.y = velocity.wy
-        odom_msg.twist.twist.angular.z = velocity.wz
-        
-        # 协方差（如果使用 EKF）
-        if self.robot_state.use_ekf:
-            # 位姿协方差（6x6: x,y,z,roll,pitch,yaw）
-            pose_cov = np.zeros(36))))))))
-            # 从 EKF 协方差矩阵提取相关部分
-            for i in range(6):
-                for j in range(6):
-                    if i < 3 and j < 3:  # 位置
-                        pose_cov[i*6 + j] = self.robot_state.covariance[i, j]
-                    elif i >= 3 and j >= 3:  # 姿态
-                        pose_cov[i*6 + j] = self.robot_state.covariance[i, j]
-                        
-            odom_msg.pose.covariance = pose_cov.tolist()
+        """发布机器人状态 - 修复版本"""
+        try:
+            # 🔧 修复：确保 current_pose 和 current_velocity 都存在所需的键
+            if not all(key in self.current_pose for key in ['x', 'y', 'z', 'roll', 'pitch', 'yaw']):
+                self.get_logger().debug('current_pose 缺少必要的键，跳过发布')
+                return
+                
+            if not all(key in self.current_velocity for key in ['vx', 'vy', 'vz', 'wx', 'wy', 'wz']):
+                self.get_logger().debug('current_velocity 缺少必要的键，跳过发布')
+                return
             
-            # 速度协方差
-            twist_cov = np.zeros(36)
-            for i in range(3):
-                for j in range(3):
-                    twist_cov[i*6 + j] = self.robot_state.covariance[6+i, 6+j]
-            odom_msg.twist.covariance = twist_cov.tolist()
-        else:
-            # 固定协方差
-            odom_msg.pose.covariance = [0.1] * 36
-            odom_msg.twist.covariance = [0.05] * 36
+            # 创建里程计消息
+            odom_msg = Odometry()
+            odom_msg.header.stamp = self.get_clock().now().to_msg()
+            odom_msg.header.frame_id = self.odom_frame
+            odom_msg.child_frame_id = self.base_frame
             
-        self.odometry_pub.publish(odom_msg)
-        
-        # 发布位姿（PoseWithCovarianceStamped）
-        pose_msg = PoseWithCovarianceStamped()
-        pose_msg.header = odom_msg.header
-        pose_msg.pose.pose = odom_msg.pose.pose
-        pose_msg.pose.covariance = odom_msg.pose.covariance
-        
-        self.pose_pub.publish(pose_msg)
-        
-        # 发布 TF 变换
-        if self.publish_tf:
-            self.publish_transforms(stamp, pose)
+            # 位置
+            odom_msg.pose.pose.position.x = float(self.current_pose['x'])
+            odom_msg.pose.pose.position.y = float(self.current_pose['y'])
+            odom_msg.pose.pose.position.z = float(self.current_pose['z'])
             
-    def publish_transforms(self, stamp: Header, pose: RobotPose):
-        """发布 TF 变换"""
-        # odom -> base_link
-        odom_to_base = TransformStamped()
-        odom_to_base.header.stamp = stamp
-        odom_to_base.header.frame_id = self.odom_frame
-        odom_to_base.child_frame_id = self.base_frame
-        
-        odom_to_base.transform.translation.x = pose.x
-        odom_to_base.transform.translation.y = pose.y
-        odom_to_base.transform.translation.z = pose.z
-        
-        q = Rotation.from_euler('xyz', [pose.roll, pose.pitch, pose.yaw]).as_quat()
-        odom_to_base.transform.rotation.x = q[0]
-        odom_to_base.transform.rotation.y = q[1]
-        odom_to_base.transform.rotation.z = q[2]
-        odom_to_base.transform.rotation.w = q[3]
-        
-        # base_link -> dvl_link
-        base_to_dvl = TransformStamped()
-        base_to_dvl.header.stamp = stamp
-        base_to_dvl.header.frame_id = self.base_frame
-        base_to_dvl.child_frame_id = 'dvl_link'
-        
-        base_to_dvl.transform.translation.x = self.robot_state.dvl_position[0]
-        base_to_dvl.transform.translation.y = self.robot_state.dvl_position[1]
-        base_to_dvl.transform.translation.z = self.robot_state.dvl_position[2]
-        
-        dvl_q = self.robot_state.dvl_orientation.as_quat()
-        base_to_dvl.transform.rotation.x = dvl_q[0]
-        base_to_dvl.transform.rotation.y = dvl_q[1]
-        base_to_dvl.transform.rotation.z = dvl_q[2]
-        base_to_dvl.transform.rotation.w = dvl_q[3]
-        
-        # base_link -> camera_link
-        base_to_camera = TransformStamped()
-        base_to_camera.header.stamp = stamp
-        base_to_camera.header.frame_id = self.base_frame
-        base_to_camera.child_frame_id = 'camera_link'
-        
-        base_to_camera.transform.translation.x = 0.5  # 假设相机在前方 0.5m
-        base_to_camera.transform.translation.y = 0.0
-        base_to_camera.transform.translation.z = 0.1
-        base_to_camera.transform.rotation.w = 1.0
-        
-        # base_link -> sonar_link
-        base_to_sonar = TransformStamped()
-        base_to_sonar.header.stamp = stamp
-        base_to_sonar.header.frame_id = self.base_frame
-        base_to_sonar.child_frame_id = 'sonar_link'
-        
-        base_to_sonar.transform.translation.x = 0.6
-        base_to_sonar.transform.translation.y = 0.0
-        base_to_sonar.transform.translation.z = -0.2
-        base_to_sonar.transform.rotation.w = 1.0
-        
-        # base_link -> imu_link
-        base_to_imu = TransformStamped()
-        base_to_imu.header.stamp = stamp
-        base_to_imu.header.frame_id = self.base_frame
-        base_to_imu.child_frame_id = 'imu_link'
-        
-        base_to_imu.transform.translation.x = 0.0
-        base_to_imu.transform.translation.y = 0.0
-        base_to_imu.transform.translation.z = 0.0
-        base_to_imu.transform.rotation.w = 1.0
-        
-        # 发布所有变换
-        self.tf_broadcaster.sendTransform([
-            odom_to_base,
-            base_to_dvl,
-            base_to_camera,
-            base_to_sonar,
-            base_to_imu
-        ])
-        
-    def reset_state(self, pose: Optional[RobotPose] = None):
-        """重置状态估计"""
-        self.robot_state.reset(pose)
-        self.get_logger().info('机器人状态已重置')
+            # 姿态
+            q = Rotation.from_euler('xyz', [
+                float(self.current_pose['roll']),
+                float(self.current_pose['pitch']), 
+                float(self.current_pose['yaw'])
+            ]).as_quat()
+            
+            odom_msg.pose.pose.orientation.x = float(q[0])
+            odom_msg.pose.pose.orientation.y = float(q[1])
+            odom_msg.pose.pose.orientation.z = float(q[2])
+            odom_msg.pose.pose.orientation.w = float(q[3])
+            
+            # 速度
+            odom_msg.twist.twist.linear.x = float(self.current_velocity['vx'])
+            odom_msg.twist.twist.linear.y = float(self.current_velocity['vy'])
+            odom_msg.twist.twist.linear.z = float(self.current_velocity['vz'])
+            odom_msg.twist.twist.angular.x = float(self.current_velocity['wx'])
+            odom_msg.twist.twist.angular.y = float(self.current_velocity['wy'])
+            odom_msg.twist.twist.angular.z = float(self.current_velocity['wz'])
+            
+            # 发布
+            self.odometry_pub.publish(odom_msg)
+            
+        except Exception as e:
+            self.get_logger().error(f'发布状态失败: {e}')
 
 def main(args=None):
     rclpy.init(args=args)
@@ -387,9 +359,11 @@ def main(args=None):
         node = RobotStateNode()
         rclpy.spin(node)
     except KeyboardInterrupt:
-        pass
+        print("\n🛑 用户中断")
     except Exception as e:
-        print(f'错误: {e}')
+        print(f'❌ 节点错误: {e}')
+        import traceback
+        traceback.print_exc()
     finally:
         if rclpy.ok():
             rclpy.shutdown()

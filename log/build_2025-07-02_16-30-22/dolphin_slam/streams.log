@@ -1,0 +1,131 @@
+[0.295s] Invoking command in '/home/parallels/dolphin_slam_ws/build/dolphin_slam': PYTHONPATH=/home/parallels/dolphin_slam_ws/build/dolphin_slam/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/parallels/dolphin_slam_ws/install/dolphin_slam/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py develop --uninstall --editable --build-directory /home/parallels/dolphin_slam_ws/build/dolphin_slam/build
+[0.404s] running develop
+[0.468s] Removing /home/parallels/dolphin_slam_ws/install/dolphin_slam/lib/python3.10/site-packages/dolphin-slam.egg-link (link to .)
+[0.481s] Invoked command in '/home/parallels/dolphin_slam_ws/build/dolphin_slam' returned '0': PYTHONPATH=/home/parallels/dolphin_slam_ws/build/dolphin_slam/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/parallels/dolphin_slam_ws/install/dolphin_slam/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py develop --uninstall --editable --build-directory /home/parallels/dolphin_slam_ws/build/dolphin_slam/build
+[0.481s] Invoking command in '/home/parallels/dolphin_slam_ws/src/dolphin_slam': PYTHONPATH=/home/parallels/dolphin_slam_ws/build/dolphin_slam/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/parallels/dolphin_slam_ws/install/dolphin_slam/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py egg_info --egg-base ../../build/dolphin_slam build --build-base /home/parallels/dolphin_slam_ws/build/dolphin_slam/build install --record /home/parallels/dolphin_slam_ws/build/dolphin_slam/install.log --single-version-externally-managed install_data --force
+[0.579s] running egg_info
+[0.580s] writing ../../build/dolphin_slam/dolphin_slam.egg-info/PKG-INFO
+[0.580s] writing dependency_links to ../../build/dolphin_slam/dolphin_slam.egg-info/dependency_links.txt
+[0.580s] writing entry points to ../../build/dolphin_slam/dolphin_slam.egg-info/entry_points.txt
+[0.580s] writing requirements to ../../build/dolphin_slam/dolphin_slam.egg-info/requires.txt
+[0.580s] writing top-level names to ../../build/dolphin_slam/dolphin_slam.egg-info/top_level.txt
+[0.581s] reading manifest file '../../build/dolphin_slam/dolphin_slam.egg-info/SOURCES.txt'
+[0.581s] adding license file 'LICENSE.txt'
+[0.582s] writing manifest file '../../build/dolphin_slam/dolphin_slam.egg-info/SOURCES.txt'
+[0.582s] running build
+[0.582s] running build_py
+[0.582s] creating /home/parallels/dolphin_slam_ws/build/dolphin_slam/build
+[0.582s] creating /home/parallels/dolphin_slam_ws/build/dolphin_slam/build/lib
+[0.582s] creating /home/parallels/dolphin_slam_ws/build/dolphin_slam/build/lib/dolphin_slam
+[0.582s] copying dolphin_slam/place_cell_network.py -> /home/parallels/dolphin_slam_ws/build/dolphin_slam/build/lib/dolphin_slam
+[0.582s] copying dolphin_slam/image_sync_node.py -> /home/parallels/dolphin_slam_ws/build/dolphin_slam/build/lib/dolphin_slam
+[0.582s] copying dolphin_slam/robot_state_node.py -> /home/parallels/dolphin_slam_ws/build/dolphin_slam/build/lib/dolphin_slam
+[0.583s] copying dolphin_slam/robot_state.py -> /home/parallels/dolphin_slam_ws/build/dolphin_slam/build/lib/dolphin_slam
+[0.583s] copying dolphin_slam/fabmap.py -> /home/parallels/dolphin_slam_ws/build/dolphin_slam/build/lib/dolphin_slam
+[0.583s] copying dolphin_slam/image_processing_node.py -> /home/parallels/dolphin_slam_ws/build/dolphin_slam/build/lib/dolphin_slam
+[0.583s] copying dolphin_slam/local_view_cells.py -> /home/parallels/dolphin_slam_ws/build/dolphin_slam/build/lib/dolphin_slam
+[0.584s] copying dolphin_slam/utils.py -> /home/parallels/dolphin_slam_ws/build/dolphin_slam/build/lib/dolphin_slam
+[0.584s] copying dolphin_slam/enhanced_experience_map_node.py -> /home/parallels/dolphin_slam_ws/build/dolphin_slam/build/lib/dolphin_slam
+[0.584s] copying dolphin_slam/local_view_node.py -> /home/parallels/dolphin_slam_ws/build/dolphin_slam/build/lib/dolphin_slam
+[0.584s] copying dolphin_slam/place_cell_node.py -> /home/parallels/dolphin_slam_ws/build/dolphin_slam/build/lib/dolphin_slam
+[0.584s] copying dolphin_slam/experience_map_node.py -> /home/parallels/dolphin_slam_ws/build/dolphin_slam/build/lib/dolphin_slam
+[0.584s] copying dolphin_slam/image_processing.py -> /home/parallels/dolphin_slam_ws/build/dolphin_slam/build/lib/dolphin_slam
+[0.585s] copying dolphin_slam/__init__.py -> /home/parallels/dolphin_slam_ws/build/dolphin_slam/build/lib/dolphin_slam
+[0.585s] copying dolphin_slam/experience_map.py -> /home/parallels/dolphin_slam_ws/build/dolphin_slam/build/lib/dolphin_slam
+[0.585s] copying dolphin_slam/dataset_player_node.py -> /home/parallels/dolphin_slam_ws/build/dolphin_slam/build/lib/dolphin_slam
+[0.585s] creating /home/parallels/dolphin_slam_ws/build/dolphin_slam/build/lib/nodes
+[0.586s] copying nodes/robot_state_node.py -> /home/parallels/dolphin_slam_ws/build/dolphin_slam/build/lib/nodes
+[0.586s] copying nodes/image_processing_node.py -> /home/parallels/dolphin_slam_ws/build/dolphin_slam/build/lib/nodes
+[0.586s] copying nodes/enhanced_experience_map_node.py -> /home/parallels/dolphin_slam_ws/build/dolphin_slam/build/lib/nodes
+[0.586s] copying nodes/local_view_node.py -> /home/parallels/dolphin_slam_ws/build/dolphin_slam/build/lib/nodes
+[0.586s] copying nodes/place_cell_node.py -> /home/parallels/dolphin_slam_ws/build/dolphin_slam/build/lib/nodes
+[0.586s] copying nodes/experience_map_node.py -> /home/parallels/dolphin_slam_ws/build/dolphin_slam/build/lib/nodes
+[0.586s] copying nodes/__init__.py -> /home/parallels/dolphin_slam_ws/build/dolphin_slam/build/lib/nodes
+[0.586s] copying nodes/dataset_player_node.py -> /home/parallels/dolphin_slam_ws/build/dolphin_slam/build/lib/nodes
+[0.587s] running install
+[0.587s] running install_lib
+[0.587s] creating /home/parallels/dolphin_slam_ws/install/dolphin_slam/lib/python3.10/site-packages/dolphin_slam
+[0.587s] copying /home/parallels/dolphin_slam_ws/build/dolphin_slam/build/lib/dolphin_slam/place_cell_network.py -> /home/parallels/dolphin_slam_ws/install/dolphin_slam/lib/python3.10/site-packages/dolphin_slam
+[0.587s] copying /home/parallels/dolphin_slam_ws/build/dolphin_slam/build/lib/dolphin_slam/image_sync_node.py -> /home/parallels/dolphin_slam_ws/install/dolphin_slam/lib/python3.10/site-packages/dolphin_slam
+[0.588s] copying /home/parallels/dolphin_slam_ws/build/dolphin_slam/build/lib/dolphin_slam/robot_state_node.py -> /home/parallels/dolphin_slam_ws/install/dolphin_slam/lib/python3.10/site-packages/dolphin_slam
+[0.588s] copying /home/parallels/dolphin_slam_ws/build/dolphin_slam/build/lib/dolphin_slam/robot_state.py -> /home/parallels/dolphin_slam_ws/install/dolphin_slam/lib/python3.10/site-packages/dolphin_slam
+[0.588s] copying /home/parallels/dolphin_slam_ws/build/dolphin_slam/build/lib/dolphin_slam/fabmap.py -> /home/parallels/dolphin_slam_ws/install/dolphin_slam/lib/python3.10/site-packages/dolphin_slam
+[0.588s] copying /home/parallels/dolphin_slam_ws/build/dolphin_slam/build/lib/dolphin_slam/image_processing_node.py -> /home/parallels/dolphin_slam_ws/install/dolphin_slam/lib/python3.10/site-packages/dolphin_slam
+[0.588s] copying /home/parallels/dolphin_slam_ws/build/dolphin_slam/build/lib/dolphin_slam/local_view_cells.py -> /home/parallels/dolphin_slam_ws/install/dolphin_slam/lib/python3.10/site-packages/dolphin_slam
+[0.588s] copying /home/parallels/dolphin_slam_ws/build/dolphin_slam/build/lib/dolphin_slam/utils.py -> /home/parallels/dolphin_slam_ws/install/dolphin_slam/lib/python3.10/site-packages/dolphin_slam
+[0.588s] copying /home/parallels/dolphin_slam_ws/build/dolphin_slam/build/lib/dolphin_slam/enhanced_experience_map_node.py -> /home/parallels/dolphin_slam_ws/install/dolphin_slam/lib/python3.10/site-packages/dolphin_slam
+[0.588s] copying /home/parallels/dolphin_slam_ws/build/dolphin_slam/build/lib/dolphin_slam/local_view_node.py -> /home/parallels/dolphin_slam_ws/install/dolphin_slam/lib/python3.10/site-packages/dolphin_slam
+[0.588s] copying /home/parallels/dolphin_slam_ws/build/dolphin_slam/build/lib/dolphin_slam/place_cell_node.py -> /home/parallels/dolphin_slam_ws/install/dolphin_slam/lib/python3.10/site-packages/dolphin_slam
+[0.588s] copying /home/parallels/dolphin_slam_ws/build/dolphin_slam/build/lib/dolphin_slam/experience_map_node.py -> /home/parallels/dolphin_slam_ws/install/dolphin_slam/lib/python3.10/site-packages/dolphin_slam
+[0.588s] copying /home/parallels/dolphin_slam_ws/build/dolphin_slam/build/lib/dolphin_slam/image_processing.py -> /home/parallels/dolphin_slam_ws/install/dolphin_slam/lib/python3.10/site-packages/dolphin_slam
+[0.588s] copying /home/parallels/dolphin_slam_ws/build/dolphin_slam/build/lib/dolphin_slam/__init__.py -> /home/parallels/dolphin_slam_ws/install/dolphin_slam/lib/python3.10/site-packages/dolphin_slam
+[0.588s] copying /home/parallels/dolphin_slam_ws/build/dolphin_slam/build/lib/dolphin_slam/experience_map.py -> /home/parallels/dolphin_slam_ws/install/dolphin_slam/lib/python3.10/site-packages/dolphin_slam
+[0.588s] copying /home/parallels/dolphin_slam_ws/build/dolphin_slam/build/lib/dolphin_slam/dataset_player_node.py -> /home/parallels/dolphin_slam_ws/install/dolphin_slam/lib/python3.10/site-packages/dolphin_slam
+[0.588s] creating /home/parallels/dolphin_slam_ws/install/dolphin_slam/lib/python3.10/site-packages/nodes
+[0.588s] copying /home/parallels/dolphin_slam_ws/build/dolphin_slam/build/lib/nodes/robot_state_node.py -> /home/parallels/dolphin_slam_ws/install/dolphin_slam/lib/python3.10/site-packages/nodes
+[0.588s] copying /home/parallels/dolphin_slam_ws/build/dolphin_slam/build/lib/nodes/image_processing_node.py -> /home/parallels/dolphin_slam_ws/install/dolphin_slam/lib/python3.10/site-packages/nodes
+[0.588s] copying /home/parallels/dolphin_slam_ws/build/dolphin_slam/build/lib/nodes/enhanced_experience_map_node.py -> /home/parallels/dolphin_slam_ws/install/dolphin_slam/lib/python3.10/site-packages/nodes
+[0.588s] copying /home/parallels/dolphin_slam_ws/build/dolphin_slam/build/lib/nodes/local_view_node.py -> /home/parallels/dolphin_slam_ws/install/dolphin_slam/lib/python3.10/site-packages/nodes
+[0.589s] copying /home/parallels/dolphin_slam_ws/build/dolphin_slam/build/lib/nodes/place_cell_node.py -> /home/parallels/dolphin_slam_ws/install/dolphin_slam/lib/python3.10/site-packages/nodes
+[0.589s] copying /home/parallels/dolphin_slam_ws/build/dolphin_slam/build/lib/nodes/experience_map_node.py -> /home/parallels/dolphin_slam_ws/install/dolphin_slam/lib/python3.10/site-packages/nodes
+[0.589s] copying /home/parallels/dolphin_slam_ws/build/dolphin_slam/build/lib/nodes/__init__.py -> /home/parallels/dolphin_slam_ws/install/dolphin_slam/lib/python3.10/site-packages/nodes
+[0.589s] copying /home/parallels/dolphin_slam_ws/build/dolphin_slam/build/lib/nodes/dataset_player_node.py -> /home/parallels/dolphin_slam_ws/install/dolphin_slam/lib/python3.10/site-packages/nodes
+[0.589s] byte-compiling /home/parallels/dolphin_slam_ws/install/dolphin_slam/lib/python3.10/site-packages/dolphin_slam/place_cell_network.py to place_cell_network.cpython-310.pyc
+[0.590s] byte-compiling /home/parallels/dolphin_slam_ws/install/dolphin_slam/lib/python3.10/site-packages/dolphin_slam/image_sync_node.py to image_sync_node.cpython-310.pyc
+[0.591s] byte-compiling /home/parallels/dolphin_slam_ws/install/dolphin_slam/lib/python3.10/site-packages/dolphin_slam/robot_state_node.py to robot_state_node.cpython-310.pyc
+[0.592s] byte-compiling /home/parallels/dolphin_slam_ws/install/dolphin_slam/lib/python3.10/site-packages/dolphin_slam/robot_state.py to robot_state.cpython-310.pyc
+[0.592s] byte-compiling /home/parallels/dolphin_slam_ws/install/dolphin_slam/lib/python3.10/site-packages/dolphin_slam/fabmap.py to fabmap.cpython-310.pyc
+[0.594s] byte-compiling /home/parallels/dolphin_slam_ws/install/dolphin_slam/lib/python3.10/site-packages/dolphin_slam/image_processing_node.py to image_processing_node.cpython-310.pyc
+[0.594s] byte-compiling /home/parallels/dolphin_slam_ws/install/dolphin_slam/lib/python3.10/site-packages/dolphin_slam/local_view_cells.py to local_view_cells.cpython-310.pyc
+[0.595s] byte-compiling /home/parallels/dolphin_slam_ws/install/dolphin_slam/lib/python3.10/site-packages/dolphin_slam/utils.py to utils.cpython-310.pyc
+[0.596s] byte-compiling /home/parallels/dolphin_slam_ws/install/dolphin_slam/lib/python3.10/site-packages/dolphin_slam/enhanced_experience_map_node.py to enhanced_experience_map_node.cpython-310.pyc
+[0.596s] byte-compiling /home/parallels/dolphin_slam_ws/install/dolphin_slam/lib/python3.10/site-packages/dolphin_slam/local_view_node.py to local_view_node.cpython-310.pyc
+[0.597s] byte-compiling /home/parallels/dolphin_slam_ws/install/dolphin_slam/lib/python3.10/site-packages/dolphin_slam/place_cell_node.py to place_cell_node.cpython-310.pyc
+[0.598s] byte-compiling /home/parallels/dolphin_slam_ws/install/dolphin_slam/lib/python3.10/site-packages/dolphin_slam/experience_map_node.py to experience_map_node.cpython-310.pyc
+[0.598s] byte-compiling /home/parallels/dolphin_slam_ws/install/dolphin_slam/lib/python3.10/site-packages/dolphin_slam/image_processing.py to image_processing.cpython-310.pyc
+[0.599s] byte-compiling /home/parallels/dolphin_slam_ws/install/dolphin_slam/lib/python3.10/site-packages/dolphin_slam/__init__.py to __init__.cpython-310.pyc
+[0.599s] byte-compiling /home/parallels/dolphin_slam_ws/install/dolphin_slam/lib/python3.10/site-packages/dolphin_slam/experience_map.py to experience_map.cpython-310.pyc
+[0.600s] byte-compiling /home/parallels/dolphin_slam_ws/install/dolphin_slam/lib/python3.10/site-packages/dolphin_slam/dataset_player_node.py to dataset_player_node.cpython-310.pyc
+[0.601s] byte-compiling /home/parallels/dolphin_slam_ws/install/dolphin_slam/lib/python3.10/site-packages/nodes/robot_state_node.py to robot_state_node.cpython-310.pyc
+[0.602s] byte-compiling /home/parallels/dolphin_slam_ws/install/dolphin_slam/lib/python3.10/site-packages/nodes/image_processing_node.py to image_processing_node.cpython-310.pyc
+[0.602s] byte-compiling /home/parallels/dolphin_slam_ws/install/dolphin_slam/lib/python3.10/site-packages/nodes/enhanced_experience_map_node.py to enhanced_experience_map_node.cpython-310.pyc
+[0.603s] byte-compiling /home/parallels/dolphin_slam_ws/install/dolphin_slam/lib/python3.10/site-packages/nodes/local_view_node.py to local_view_node.cpython-310.pyc
+[0.603s] byte-compiling /home/parallels/dolphin_slam_ws/install/dolphin_slam/lib/python3.10/site-packages/nodes/place_cell_node.py to place_cell_node.cpython-310.pyc
+[0.604s] byte-compiling /home/parallels/dolphin_slam_ws/install/dolphin_slam/lib/python3.10/site-packages/nodes/experience_map_node.py to experience_map_node.cpython-310.pyc
+[0.604s] byte-compiling /home/parallels/dolphin_slam_ws/install/dolphin_slam/lib/python3.10/site-packages/nodes/__init__.py to __init__.cpython-310.pyc
+[0.604s] byte-compiling /home/parallels/dolphin_slam_ws/install/dolphin_slam/lib/python3.10/site-packages/nodes/dataset_player_node.py to dataset_player_node.cpython-310.pyc
+[0.606s] running install_data
+[0.606s] copying resource/dolphin_slam -> /home/parallels/dolphin_slam_ws/install/dolphin_slam/share/ament_index/resource_index/packages
+[0.606s] copying package.xml -> /home/parallels/dolphin_slam_ws/install/dolphin_slam/share/dolphin_slam
+[0.606s] copying launch/dolphin_slam_launch.py -> /home/parallels/dolphin_slam_ws/install/dolphin_slam/share/dolphin_slam/launch
+[0.606s] copying config/dolphin_slam_params.yaml -> /home/parallels/dolphin_slam_ws/install/dolphin_slam/share/dolphin_slam/config
+[0.606s] copying config/sim_waypoints.yaml -> /home/parallels/dolphin_slam_ws/install/dolphin_slam/share/dolphin_slam/config
+[0.607s] copying config/camera_calibration.yaml -> /home/parallels/dolphin_slam_ws/install/dolphin_slam/share/dolphin_slam/config
+[0.607s] copying config/dolphin_slam_sim_params.yaml -> /home/parallels/dolphin_slam_ws/install/dolphin_slam/share/dolphin_slam/config
+[0.607s] copying rviz/dolphin_slam_enhanced.rviz -> /home/parallels/dolphin_slam_ws/install/dolphin_slam/share/dolphin_slam/rviz
+[0.607s] copying rviz/dolphin_slam_safe.rviz -> /home/parallels/dolphin_slam_ws/install/dolphin_slam/share/dolphin_slam/rviz
+[0.608s] copying rviz/dolphin_slam_sim.rviz -> /home/parallels/dolphin_slam_ws/install/dolphin_slam/share/dolphin_slam/rviz
+[0.608s] copying rviz/dolphin_slam_fixed.rviz -> /home/parallels/dolphin_slam_ws/install/dolphin_slam/share/dolphin_slam/rviz
+[0.608s] copying rviz/dolphin_slam.rviz -> /home/parallels/dolphin_slam_ws/install/dolphin_slam/share/dolphin_slam/rviz
+[0.608s] copying scripts/slam_monitor.py -> /home/parallels/dolphin_slam_ws/install/dolphin_slam/share/dolphin_slam/scripts
+[0.608s] copying scripts/analyze_dataset.py -> /home/parallels/dolphin_slam_ws/install/dolphin_slam/share/dolphin_slam/scripts
+[0.609s] copying scripts/data_validation_script.py -> /home/parallels/dolphin_slam_ws/install/dolphin_slam/share/dolphin_slam/scripts
+[0.609s] copying scripts/config_checker_fixer.py -> /home/parallels/dolphin_slam_ws/install/dolphin_slam/share/dolphin_slam/scripts
+[0.609s] copying scripts/conflict_free_monitor.py -> /home/parallels/dolphin_slam_ws/install/dolphin_slam/share/dolphin_slam/scripts
+[0.609s] copying scripts/comprehensive_fix_script.py -> /home/parallels/dolphin_slam_ws/install/dolphin_slam/share/dolphin_slam/scripts
+[0.609s] copying scripts/dolphin_slam_fix_script.py -> /home/parallels/dolphin_slam_ws/install/dolphin_slam/share/dolphin_slam/scripts
+[0.610s] copying scripts/simple_working_monitor.py -> /home/parallels/dolphin_slam_ws/install/dolphin_slam/share/dolphin_slam/scripts
+[0.610s] copying scripts/dolphin_slam_fix.py -> /home/parallels/dolphin_slam_ws/install/dolphin_slam/share/dolphin_slam/scripts
+[0.610s] copying scripts/visualize_results.py -> /home/parallels/dolphin_slam_ws/install/dolphin_slam/share/dolphin_slam/scripts
+[0.610s] running install_egg_info
+[0.611s] Copying ../../build/dolphin_slam/dolphin_slam.egg-info to /home/parallels/dolphin_slam_ws/install/dolphin_slam/lib/python3.10/site-packages/dolphin_slam-1.0.0-py3.10.egg-info
+[0.612s] running install_scripts
+[0.620s] Installing dataset_player_node script to /home/parallels/dolphin_slam_ws/install/dolphin_slam/lib/dolphin_slam
+[0.620s] Installing experience_map_node script to /home/parallels/dolphin_slam_ws/install/dolphin_slam/lib/dolphin_slam
+[0.620s] Installing image_processing_node script to /home/parallels/dolphin_slam_ws/install/dolphin_slam/lib/dolphin_slam
+[0.620s] Installing image_sync_node script to /home/parallels/dolphin_slam_ws/install/dolphin_slam/lib/dolphin_slam
+[0.621s] Installing local_view_node script to /home/parallels/dolphin_slam_ws/install/dolphin_slam/lib/dolphin_slam
+[0.621s] Installing place_cell_node script to /home/parallels/dolphin_slam_ws/install/dolphin_slam/lib/dolphin_slam
+[0.621s] Installing robot_state_node script to /home/parallels/dolphin_slam_ws/install/dolphin_slam/lib/dolphin_slam
+[0.621s] writing list of installed files to '/home/parallels/dolphin_slam_ws/build/dolphin_slam/install.log'
+[0.632s] Invoked command in '/home/parallels/dolphin_slam_ws/src/dolphin_slam' returned '0': PYTHONPATH=/home/parallels/dolphin_slam_ws/build/dolphin_slam/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/parallels/dolphin_slam_ws/install/dolphin_slam/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py egg_info --egg-base ../../build/dolphin_slam build --build-base /home/parallels/dolphin_slam_ws/build/dolphin_slam/build install --record /home/parallels/dolphin_slam_ws/build/dolphin_slam/install.log --single-version-externally-managed install_data --force

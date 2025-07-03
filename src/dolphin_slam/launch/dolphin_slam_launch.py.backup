@@ -52,65 +52,19 @@ def generate_launch_description():
         'enable_rviz',
         default_value='true',
         description='启动 RViz')
-    
-    # 图像处理节点
-    image_processing_node = Node(
+
+    # 数据集播放器节点
+    dataset_player_node = Node(
         package='dolphin_slam',
-        executable='image_processing_node',
-        name='image_processing_node',
+        executable='dataset_player_node',
+        name='dataset_player_node',
         output='screen',
-        parameters=[params_file, {
-            'use_sim_time': use_sim_time,
-            'dataset.base_path': dataset_path
-        }],
-        remappings=[
-            ('/camera/image_raw', '/dolphin_slam/camera/image'),
-            ('/sonar/image_raw', '/dolphin_slam/sonar/image')
-        ]
-    )
-    
-    # 局部视觉细胞节点
-    local_view_node = Node(
-        package='dolphin_slam',
-        executable='local_view_node',
-        name='local_view_node',
-        output='screen',
-        parameters=[params_file, {
+        parameters=[{
+            'dataset_path': dataset_path,
+            'playback_speed': 1.0,
+            'loop': False,
             'use_sim_time': use_sim_time
-        }],
-        remappings=[
-            ('/features/descriptors', '/dolphin_slam/features/descriptors')
-        ]
-    )
-    
-    # 位置细胞网络节点
-    place_cell_node = Node(
-        package='dolphin_slam',
-        executable='place_cell_node',
-        name='place_cell_node',
-        output='screen',
-        parameters=[params_file, {
-            'use_sim_time': use_sim_time
-        }],
-        remappings=[
-            ('/robot/odometry', '/dolphin_slam/odometry'),
-            ('/local_view/matches', '/dolphin_slam/local_view/matches')
-        ]
-    )
-    
-    # 经验地图节点
-    experience_map_node = Node(
-        package='dolphin_slam',
-        executable='experience_map_node',
-        name='experience_map_node',
-        output='screen',
-        parameters=[params_file, {
-            'use_sim_time': use_sim_time
-        }],
-        remappings=[
-            ('/place_cells/activity', '/dolphin_slam/place_cells/activity'),
-            ('/local_view/matches', '/dolphin_slam/local_view/matches')
-        ]
+        }]
     )
     
     # 机器人状态节点
@@ -121,20 +75,92 @@ def generate_launch_description():
         output='screen',
         parameters=[params_file, {
             'use_sim_time': use_sim_time,
-            'navigation_csv': PathJoinSubstitution([dataset_path, 'navigation.csv'])
+            'dataset_path': dataset_path
         }]
     )
     
-    # 静态 TF 发布器（发布传感器变换）
-    static_tf_publisher = Node(
+    # 图像处理节点
+    image_processing_node = Node(
+        package='dolphin_slam',
+        executable='image_processing_node',
+        name='image_processing_node',
+        output='screen',
+        parameters=[params_file, {
+            'use_sim_time': use_sim_time,
+            'dataset_path': dataset_path
+        }]
+    )
+    
+    # 局部视觉细胞节点
+    local_view_node = Node(
+        package='dolphin_slam',
+        executable='local_view_node',
+        name='local_view_node',
+        output='screen',
+        parameters=[params_file, {
+            'use_sim_time': use_sim_time
+        }]
+    )
+    
+    # 位置细胞网络节点
+    place_cell_node = Node(
+        package='dolphin_slam',
+        executable='place_cell_node',
+        name='place_cell_node',
+        output='screen',
+        parameters=[params_file, {
+            'use_sim_time': use_sim_time
+        }]
+    )
+    
+    # 经验地图节点
+    experience_map_node = Node(
+        package='dolphin_slam',
+        executable='experience_map_node',
+        name='experience_map_node',
+        output='screen',
+        parameters=[params_file, {
+            'use_sim_time': use_sim_time
+        }]
+    )
+    
+    # 静态 TF 发布器 - map到odom
+    map_to_odom_tf = Node(
         package='tf2_ros',
         executable='static_transform_publisher',
-        name='static_transform_publisher',
+        name='map_to_odom_publisher',
+        output='screen',
+        arguments=['0', '0', '0', '0', '0', '0', 'map', 'odom']
+    )
+    
+    # 静态 TF 发布器 - 传感器到base_link
+    sensor_tf_publisher = Node(
+        package='tf2_ros',
+        executable='static_transform_publisher',
+        name='sensor_tf_publisher',
         output='screen',
         arguments=['0.75', '0', '-0.4', '0', '0', '0', 'base_link', 'dvl_link']
     )
     
-    # RViz
+    # 静态 TF 发布器 - 相机
+    camera_tf_publisher = Node(
+        package='tf2_ros',
+        executable='static_transform_publisher',
+        name='camera_tf_publisher',
+        output='screen',
+        arguments=['0.5', '0', '0.2', '0', '0', '0', 'base_link', 'camera_link']
+    )
+    
+    # 静态 TF 发布器 - 声呐
+    sonar_tf_publisher = Node(
+        package='tf2_ros',
+        executable='static_transform_publisher',
+        name='sonar_tf_publisher',
+        output='screen',
+        arguments=['0.8', '0', '-0.3', '0', '0', '0', 'base_link', 'sonar_link']
+    )
+    
+    # RViz 可视化节点 - 这是关键部分！
     rviz_node = Node(
         package='rviz2',
         executable='rviz2',
@@ -147,21 +173,6 @@ def generate_launch_description():
         }]
     )
     
-    # 数据集播放器节点（可选）
-    dataset_player_node = Node(
-        package='dolphin_slam',
-        executable='dataset_player_node',
-        name='dataset_player_node',
-        output='screen',
-        parameters=[{
-            'dataset_path': dataset_path,
-            'playback_speed': 1.0,
-            'loop': False,
-            'use_sim_time': True
-        }],
-        condition=IfCondition(use_sim_time)
-    )
-    
     # 创建启动描述
     ld = LaunchDescription()
     
@@ -172,16 +183,21 @@ def generate_launch_description():
     ld.add_action(declare_dataset_path_cmd)
     ld.add_action(declare_enable_rviz_cmd)
     
-    # 添加节点
+    # 添加核心 SLAM 节点
+    ld.add_action(dataset_player_node)
     ld.add_action(robot_state_node)
     ld.add_action(image_processing_node)
     ld.add_action(local_view_node)
     ld.add_action(place_cell_node)
     ld.add_action(experience_map_node)
-    ld.add_action(static_tf_publisher)
-    ld.add_action(rviz_node)
     
-    # 如果使用仿真时间，添加数据集播放器
-    ld.add_action(dataset_player_node)
+    # 添加 TF 发布器
+    ld.add_action(map_to_odom_tf)
+    ld.add_action(sensor_tf_publisher)
+    ld.add_action(camera_tf_publisher)
+    ld.add_action(sonar_tf_publisher)
+    
+    # 添加 RViz 节点（有条件启动）
+    ld.add_action(rviz_node)
     
     return ld

@@ -1,0 +1,1 @@
+/home/parallels/dolphin_slam_ws/src/dolphin_slam/scripts/config_checker_fixer.py

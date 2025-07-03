@@ -1,1 +1,182 @@
-/home/parallels/dolphin_slam_ws/build/dolphin_slam/config/camera_calibration.yaml
+# Dolphin SLAM - 相机标定参数
+# 基于 AUV-Based Multi-Sensor Dataset 的相机参数
+
+# Allied-Vision Manta G-917 相机参数
+camera_name: "manta_g917"
+image_width: 1692   # 降采样后的宽度 (原始: 3384)
+image_height: 1355  # 降采样后的高度 (原始: 2710)
+
+# 相机内参矩阵
+# K = [fx  0  cx]
+#     [ 0 fy  cy]
+#     [ 0  0   1]
+camera_matrix:
+  rows: 3
+  cols: 3
+  data: [1638.36157, 0.0, 1705.03529,
+         0.0, 1641.95202, 1380.27954,
+         0.0, 0.0, 1.0]
+
+# 畸变系数 (k1, k2, p1, p2, k3)
+# 使用 Plumb Bob (Brown-Conrady) 模型
+distortion_coefficients:
+  rows: 1
+  cols: 5
+  data: [-0.124823, 0.048851, 0.000259, -0.002945, 0.000000]
+
+# 畸变模型
+distortion_model: "plumb_bob"
+
+# 投影矩阵 (仅用于立体相机，单目相机可忽略)
+# P = [fx'  0  cx' Tx]
+#     [ 0  fy' cy' Ty]
+#     [ 0   0   1   0]
+projection_matrix:
+  rows: 3
+  cols: 4
+  data: [1638.36157, 0.0, 1705.03529, 0.0,
+         0.0, 1641.95202, 1380.27954, 0.0,
+         0.0, 0.0, 1.0, 0.0]
+
+# 校正矩阵 (通常为单位矩阵)
+rectification_matrix:
+  rows: 3
+  cols: 3
+  data: [1.0, 0.0, 0.0,
+         0.0, 1.0, 0.0,
+         0.0, 0.0, 1.0]
+
+# 额外的相机参数
+camera_info:
+  # 传感器信息
+  sensor_type: "CCD Progressive"
+  sensor_bit_depth: 12
+  captured_bit_depth: 8
+  
+  # 帧率
+  frame_rate: 2.0  # Hz
+  
+  # 曝光设置（示例值）
+  exposure_time: 10.0  # ms
+  gain: 1.0
+  
+  # 视场角（根据焦距和传感器尺寸计算）
+  horizontal_fov: 72.4  # 度
+  vertical_fov: 59.7   # 度
+  
+  # 水下特定参数
+  water_refraction_index: 1.33
+  glass_thickness: 5.0  # mm
+  
+# 不同分辨率的标定参数（用于不同的处理需求）
+resolutions:
+  # 全分辨率
+  full:
+    width: 3384
+    height: 2710
+    camera_matrix: [3276.72314, 0.0, 3410.07058,
+                    0.0, 3283.90404, 2760.55908,
+                    0.0, 0.0, 1.0]
+    
+  # 半分辨率
+  half:
+    width: 1692
+    height: 1355
+    camera_matrix: [1638.36157, 0.0, 1705.03529,
+                    0.0, 1641.95202, 1380.27954,
+                    0.0, 0.0, 1.0]
+    
+  # 四分之一分辨率（用于快速处理）
+  quarter:
+    width: 846
+    height: 677
+    camera_matrix: [819.18078, 0.0, 852.51764,
+                    0.0, 820.97601, 690.13977,
+                    0.0, 0.0, 1.0]
+
+# 立体相机配置（如果使用）
+stereo_calibration:
+  # 基线（两相机之间的距离）
+  baseline: 0.12  # 米
+  
+  # 左右相机的相对位置
+  T_left_to_right:
+    translation: [0.12, 0.0, 0.0]  # 米
+    rotation: [0.0, 0.0, 0.0]      # 欧拉角（弧度）
+    
+# 相机在机器人上的安装位置
+camera_to_robot:
+  # 相对于 base_link 的位置
+  translation:
+    x: 0.5   # 前方 0.5 米
+    y: 0.0   # 中心线上
+    z: 0.1   # 上方 0.1 米
+    
+  # 相对于 base_link 的旋转（欧拉角）
+  rotation:
+    roll: 0.0     # 弧度
+    pitch: -0.1   # 略微向下倾斜
+    yaw: 0.0      # 朝前
+    
+# 图像处理参数
+image_processing:
+  # 去畸变
+  undistort: true
+  
+  # 色彩校正（水下环境）
+  color_correction:
+    enabled: true
+    method: "histogram_equalization"  # 或 "white_balance", "color_restoration"
+    
+  # 降噪
+  denoising:
+    enabled: true
+    method: "bilateral"  # 或 "gaussian", "median"
+    
+  # 对比度增强
+  contrast_enhancement:
+    enabled: true
+    method: "clahe"  # Contrast Limited Adaptive Histogram Equalization
+    clip_limit: 2.0
+    grid_size: [8, 8]
+    
+# 特征提取参数（与相机相关）
+feature_extraction:
+  # 感兴趣区域（避免图像边缘）
+  roi:
+    x_offset: 50      # 像素
+    y_offset: 50      # 像素
+    width: 1592       # image_width - 2 * x_offset
+    height: 1255      # image_height - 2 * y_offset
+    
+  # 特征密度
+  target_features_per_image: 1000
+  min_feature_distance: 20  # 像素
+  
+# 自动标定参数
+auto_calibration:
+  enabled: false
+  pattern_type: "chessboard"  # 或 "circles_grid", "charuco"
+  pattern_size: [9, 6]        # 内角点数量
+  square_size: 0.05           # 米
+  
+  # 标定图像收集
+  min_calibration_images: 20
+  max_calibration_images: 50
+  
+# 数据集特定信息
+dataset_info:
+  name: "AUV-Based Multi-Sensor Dataset"
+  camera_model: "Allied-Vision Manta G-917"
+  lens_model: "Unknown"
+  
+  # 记录的参数来源
+  calibration_source: "dataset_provided"
+  calibration_date: "2023-01-01"
+  
+  # 备注
+  notes: |
+    - 原始图像为 3384x2710，数据集中降采样到 1692x1355
+    - 使用 Pinhole + Plumb Bob 畸变模型
+    - 标定参数由数据集提供
+    - 适用于水下环境，可能需要额外的水下畸变校正

@@ -1,1 +1,193 @@
-/home/parallels/dolphin_slam_ws/build/dolphin_slam/config/dolphin_slam_sim_params.yaml
+# Dolphin SLAM - 仿真环境参数配置
+# 用于 Gazebo 或其他仿真器的参数
+
+# 仿真世界设置
+simulation:
+  world_name: "underwater_world"
+  physics_engine: "ode"
+  real_time_factor: 1.0
+  update_rate: 1000.0  # Hz
+  
+  # 水体属性
+  water_properties:
+    density: 1028.0  # kg/m³ (海水)
+    viscosity: 0.00108  # Pa·s
+    current_velocity: [0.1, 0.0, 0.0]  # m/s
+    
+  # 环境条件
+  environment:
+    depth_range: [0.0, 100.0]  # 米
+    visibility: 20.0  # 米
+    turbidity: 0.1
+    ambient_light: 0.3
+    
+# 机器人模型
+robot_model:
+  name: "auv_robot"
+  type: "torpedo"  # torpedo, hybrid, biomimetic
+  
+  # 物理属性
+  mass: 30.0  # kg
+  buoyancy: 30.5  # kg (略微正浮力)
+  drag_coefficients: [0.8, 1.2, 1.2]  # x, y, z
+  
+  # 推进器配置
+  thrusters:
+    count: 6
+    max_thrust: 50.0  # N
+    configuration: "vectored"  # vectored, fixed
+    
+  # 尺寸
+  dimensions:
+    length: 1.5  # 米
+    diameter: 0.2  # 米
+    
+# 传感器仿真参数
+sensors:
+  # 相机仿真
+  camera:
+    update_rate: 10.0  # Hz
+    resolution: [1692, 1355]
+    fov: 1.396  # 弧度 (~80度)
+    
+    # 水下效果
+    underwater_effects:
+      enabled: true
+      attenuation_r: 0.06  # 红色衰减
+      attenuation_g: 0.04  # 绿色衰减
+      attenuation_b: 0.02  # 蓝色衰减
+      scattering: 0.1
+      
+    # 噪声模型
+    noise:
+      type: "gaussian"
+      mean: 0.0
+      stddev: 0.01
+      
+  # 声呐仿真
+  sonar:
+    update_rate: 2.0  # Hz
+    type: "multibeam"  # multibeam, scanning
+    
+    # Oculus M1200d 参数
+    frequency: 1.2e6  # Hz
+    beam_count: 512
+    horizontal_fov: 2.268  # 弧度 (130度)
+    vertical_fov: 0.349   # 弧度 (20度)
+    min_range: 0.1  # 米
+    max_range: 20.0  # 米
+    
+    # 声学模型
+    acoustic_model:
+      sound_speed: 1500.0  # m/s
+      absorption: 0.1  # dB/m
+      
+    # 噪声和干扰
+    noise:
+      ambient_noise: 0.05
+      multipath: true
+      surface_reflection: true
+      
+  # DVL 仿真
+  dvl:
+    update_rate: 5.0  # Hz
+    num_beams: 4
+    beam_angle: 30.0  # 度
+    
+    # 精度
+    velocity_accuracy: 0.002  # m/s
+    altitude_accuracy: 0.01   # m
+    
+    # 噪声模型
+    noise:
+      velocity_stddev: 0.005  # m/s
+      altitude_stddev: 0.02   # m
+      dropout_probability: 0.01
+      
+  # IMU 仿真
+  imu:
+    update_rate: 100.0  # Hz
+    
+    # 陀螺仪
+    gyroscope:
+      noise_density: 0.0003  # rad/s/√Hz
+      bias_stability: 0.0001  # rad/s
+      turn_on_bias: 0.01     # rad/s
+      
+    # 加速度计
+    accelerometer:
+      noise_density: 0.001   # m/s²/√Hz
+      bias_stability: 0.0001 # m/s²
+      turn_on_bias: 0.05     # m/s²
+      
+    # 磁力计（可选）
+    magnetometer:
+      enabled: true
+      noise_density: 0.1  # μT/√Hz
+      bias_stability: 0.5 # μT
+      
+# 控制器参数
+controller:
+  type: "pid"  # pid, mpc, fuzzy
+  
+  # PID 参数
+  pid:
+    # 位置控制
+    position:
+      kp: [2.0, 2.0, 2.0]
+      ki: [0.1, 0.1, 0.1]
+      kd: [0.5, 0.5, 0.5]
+      
+    # 姿态控制
+    attitude:
+      kp: [5.0, 5.0, 5.0]
+      ki: [0.2, 0.2, 0.2]
+      kd: [1.0, 1.0, 1.0]
+      
+    # 速度限制
+    max_linear_velocity: 2.0   # m/s
+    max_angular_velocity: 1.0  # rad/s
+    
+# 测试场景
+test_scenarios:
+  # 简单轨迹跟踪
+  simple_trajectory:
+    waypoints:
+      - [0, 0, -5, 0]      # x, y, z, yaw
+      - [10, 0, -5, 0]
+      - [10, 10, -5, 1.57]
+      - [0, 10, -5, 3.14]
+      - [0, 0, -5, 0]
+    speed: 0.5  # m/s
+    
+  # 搜索模式
+  search_pattern:
+    type: "lawnmower"
+    area: [20, 20]  # 米
+    spacing: 3.0    # 米
+    depth: -10.0    # 米
+    
+  # 3D 螺旋
+  helix:
+    radius: 5.0     # 米
+    pitch: 2.0      # 米/圈
+    turns: 5
+    center_depth: -20.0
+    
+# 性能监控
+performance_monitoring:
+  enabled: true
+  metrics:
+    - "frame_rate"
+    - "tracking_error" 
+    - "cpu_usage"
+    - "memory_usage"
+  log_interval: 1.0  # 秒
+  
+# 调试选项
+debug:
+  verbose: false
+  save_trajectory: true
+  save_sensor_data: true
+  visualize_sensor_rays: false
+  ground_truth_comparison: true

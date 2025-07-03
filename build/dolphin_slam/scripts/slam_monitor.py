@@ -1,0 +1,1 @@
+/home/parallels/dolphin_slam_ws/src/dolphin_slam/scripts/slam_monitor.py

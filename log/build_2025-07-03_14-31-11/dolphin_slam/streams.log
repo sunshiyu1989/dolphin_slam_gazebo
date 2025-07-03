@@ -1,0 +1,42 @@
+[0.327s] Invoking command in '/home/parallels/dolphin_slam_ws/src/dolphin_slam': PYTHONPATH=/home/parallels/dolphin_slam_ws/build/dolphin_slam/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/parallels/dolphin_slam_ws/install/dolphin_slam/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py egg_info --egg-base ../../build/dolphin_slam build --build-base /home/parallels/dolphin_slam_ws/build/dolphin_slam/build install --record /home/parallels/dolphin_slam_ws/build/dolphin_slam/install.log --single-version-externally-managed install_data
+[0.430s] running egg_info
+[0.430s] writing ../../build/dolphin_slam/dolphin_slam.egg-info/PKG-INFO
+[0.431s] writing dependency_links to ../../build/dolphin_slam/dolphin_slam.egg-info/dependency_links.txt
+[0.431s] writing entry points to ../../build/dolphin_slam/dolphin_slam.egg-info/entry_points.txt
+[0.431s] writing requirements to ../../build/dolphin_slam/dolphin_slam.egg-info/requires.txt
+[0.431s] writing top-level names to ../../build/dolphin_slam/dolphin_slam.egg-info/top_level.txt
+[0.432s] reading manifest file '../../build/dolphin_slam/dolphin_slam.egg-info/SOURCES.txt'
+[0.433s] adding license file 'LICENSE.txt'
+[0.434s] writing manifest file '../../build/dolphin_slam/dolphin_slam.egg-info/SOURCES.txt'
+[0.434s] running build
+[0.434s] running build_py
+[0.435s] copying dolphin_slam/unified_data_controller.py -> /home/parallels/dolphin_slam_ws/build/dolphin_slam/build/lib/dolphin_slam
+[0.435s] copying dolphin_slam/place_cell_node.py -> /home/parallels/dolphin_slam_ws/build/dolphin_slam/build/lib/dolphin_slam
+[0.436s] copying nodes/unified_data_controller.py -> /home/parallels/dolphin_slam_ws/build/dolphin_slam/build/lib/nodes
+[0.436s] copying nodes/place_cell_node.py -> /home/parallels/dolphin_slam_ws/build/dolphin_slam/build/lib/nodes
+[0.436s] running install
+[0.437s] running install_lib
+[0.437s] copying /home/parallels/dolphin_slam_ws/build/dolphin_slam/build/lib/dolphin_slam/unified_data_controller.py -> /home/parallels/dolphin_slam_ws/install/dolphin_slam/lib/python3.10/site-packages/dolphin_slam
+[0.438s] copying /home/parallels/dolphin_slam_ws/build/dolphin_slam/build/lib/dolphin_slam/place_cell_node.py -> /home/parallels/dolphin_slam_ws/install/dolphin_slam/lib/python3.10/site-packages/dolphin_slam
+[0.438s] copying /home/parallels/dolphin_slam_ws/build/dolphin_slam/build/lib/nodes/unified_data_controller.py -> /home/parallels/dolphin_slam_ws/install/dolphin_slam/lib/python3.10/site-packages/nodes
+[0.438s] copying /home/parallels/dolphin_slam_ws/build/dolphin_slam/build/lib/nodes/place_cell_node.py -> /home/parallels/dolphin_slam_ws/install/dolphin_slam/lib/python3.10/site-packages/nodes
+[0.439s] byte-compiling /home/parallels/dolphin_slam_ws/install/dolphin_slam/lib/python3.10/site-packages/dolphin_slam/unified_data_controller.py to unified_data_controller.cpython-310.pyc
+[0.441s] byte-compiling /home/parallels/dolphin_slam_ws/install/dolphin_slam/lib/python3.10/site-packages/dolphin_slam/place_cell_node.py to place_cell_node.cpython-310.pyc
+[0.442s] byte-compiling /home/parallels/dolphin_slam_ws/install/dolphin_slam/lib/python3.10/site-packages/nodes/unified_data_controller.py to unified_data_controller.cpython-310.pyc
+[0.443s] byte-compiling /home/parallels/dolphin_slam_ws/install/dolphin_slam/lib/python3.10/site-packages/nodes/place_cell_node.py to place_cell_node.cpython-310.pyc
+[0.444s] running install_data
+[0.445s] running install_egg_info
+[0.446s] removing '/home/parallels/dolphin_slam_ws/install/dolphin_slam/lib/python3.10/site-packages/dolphin_slam-1.0.0-py3.10.egg-info' (and everything under it)
+[0.446s] Copying ../../build/dolphin_slam/dolphin_slam.egg-info to /home/parallels/dolphin_slam_ws/install/dolphin_slam/lib/python3.10/site-packages/dolphin_slam-1.0.0-py3.10.egg-info
+[0.447s] running install_scripts
+[0.456s] Installing dataset_player_node script to /home/parallels/dolphin_slam_ws/install/dolphin_slam/lib/dolphin_slam
+[0.456s] Installing experience_map_node script to /home/parallels/dolphin_slam_ws/install/dolphin_slam/lib/dolphin_slam
+[0.456s] Installing image_processing_node script to /home/parallels/dolphin_slam_ws/install/dolphin_slam/lib/dolphin_slam
+[0.456s] Installing image_sync_node script to /home/parallels/dolphin_slam_ws/install/dolphin_slam/lib/dolphin_slam
+[0.457s] Installing local_view_node script to /home/parallels/dolphin_slam_ws/install/dolphin_slam/lib/dolphin_slam
+[0.457s] Installing place_cell_node script to /home/parallels/dolphin_slam_ws/install/dolphin_slam/lib/dolphin_slam
+[0.457s] Installing robot_state_node script to /home/parallels/dolphin_slam_ws/install/dolphin_slam/lib/dolphin_slam
+[0.457s] Installing system_stop_monitor script to /home/parallels/dolphin_slam_ws/install/dolphin_slam/lib/dolphin_slam
+[0.457s] Installing unified_data_controller script to /home/parallels/dolphin_slam_ws/install/dolphin_slam/lib/dolphin_slam
+[0.457s] writing list of installed files to '/home/parallels/dolphin_slam_ws/build/dolphin_slam/install.log'
+[0.471s] Invoked command in '/home/parallels/dolphin_slam_ws/src/dolphin_slam' returned '0': PYTHONPATH=/home/parallels/dolphin_slam_ws/build/dolphin_slam/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/parallels/dolphin_slam_ws/install/dolphin_slam/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py egg_info --egg-base ../../build/dolphin_slam build --build-base /home/parallels/dolphin_slam_ws/build/dolphin_slam/build install --record /home/parallels/dolphin_slam_ws/build/dolphin_slam/install.log --single-version-externally-managed install_data

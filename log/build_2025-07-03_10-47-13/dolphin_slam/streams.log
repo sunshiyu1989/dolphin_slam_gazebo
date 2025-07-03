@@ -1,0 +1,26 @@
+[0.420s] Invoking command in '/home/parallels/dolphin_slam_ws/build/dolphin_slam': PYTHONPATH=/home/parallels/dolphin_slam_ws/build/dolphin_slam/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/parallels/dolphin_slam_ws/install/dolphin_slam/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py develop --editable --build-directory /home/parallels/dolphin_slam_ws/build/dolphin_slam/build --no-deps symlink_data --force
+[0.544s] running develop
+[0.615s] running egg_info
+[0.615s] writing dolphin_slam.egg-info/PKG-INFO
+[0.615s] writing dependency_links to dolphin_slam.egg-info/dependency_links.txt
+[0.615s] writing entry points to dolphin_slam.egg-info/entry_points.txt
+[0.615s] writing requirements to dolphin_slam.egg-info/requires.txt
+[0.616s] writing top-level names to dolphin_slam.egg-info/top_level.txt
+[0.617s] reading manifest file 'dolphin_slam.egg-info/SOURCES.txt'
+[0.618s] writing manifest file 'dolphin_slam.egg-info/SOURCES.txt'
+[0.619s] running build_ext
+[0.619s] Creating /home/parallels/dolphin_slam_ws/install/dolphin_slam/lib/python3.10/site-packages/dolphin-slam.egg-link (link to .)
+[0.620s] Installing dataset_player_node script to /home/parallels/dolphin_slam_ws/install/dolphin_slam/lib/dolphin_slam
+[0.620s] Installing experience_map_node script to /home/parallels/dolphin_slam_ws/install/dolphin_slam/lib/dolphin_slam
+[0.620s] Installing image_processing_node script to /home/parallels/dolphin_slam_ws/install/dolphin_slam/lib/dolphin_slam
+[0.620s] Installing image_sync_node script to /home/parallels/dolphin_slam_ws/install/dolphin_slam/lib/dolphin_slam
+[0.620s] Installing local_view_node script to /home/parallels/dolphin_slam_ws/install/dolphin_slam/lib/dolphin_slam
+[0.620s] Installing place_cell_node script to /home/parallels/dolphin_slam_ws/install/dolphin_slam/lib/dolphin_slam
+[0.620s] Installing robot_state_node script to /home/parallels/dolphin_slam_ws/install/dolphin_slam/lib/dolphin_slam
+[0.620s] 
+[0.620s] Installed /home/parallels/dolphin_slam_ws/build/dolphin_slam
+[0.620s] running symlink_data
+[0.621s] symbolically linking /home/parallels/dolphin_slam_ws/build/dolphin_slam/resource/dolphin_slam -> /home/parallels/dolphin_slam_ws/install/dolphin_slam/share/ament_index/resource_index/packages
+[0.622s] symbolically linking /home/parallels/dolphin_slam_ws/build/dolphin_slam/package.xml -> /home/parallels/dolphin_slam_ws/install/dolphin_slam/share/dolphin_slam
+[0.622s] error: can't copy '/home/parallels/dolphin_slam_ws/build/dolphin_slam/launch/dolphin_slam_launch.py': doesn't exist or not a regular file
+[0.639s] Invoked command in '/home/parallels/dolphin_slam_ws/build/dolphin_slam' returned '1': PYTHONPATH=/home/parallels/dolphin_slam_ws/build/dolphin_slam/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/parallels/dolphin_slam_ws/install/dolphin_slam/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py develop --editable --build-directory /home/parallels/dolphin_slam_ws/build/dolphin_slam/build --no-deps symlink_data --force
