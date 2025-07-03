@@ -12,35 +12,56 @@ robot_state_node:
 
 image_processing_node:
   ros__parameters:
-    camera_path: "/media/psf/Samsung T7/SLAM Data/Sunboat_03-09-2023/2023-09-03-07-58-37/camera"
-    sonar_path: "/media/psf/Samsung T7/SLAM Data/Sunboat_03-09-2023/2023-09-03-07-58-37/sonar"
     feature_type: "SIFT"
-    max_features: 500
+    max_features: 200                                # 减少特征数量，提高处理速度
+    process_every_n_frames: 1                        # 处理每一帧（水下变化慢）
     enable_visualization: true
     camera_topic: "/camera/image_raw"
     sonar_topic: "/sonar/image_raw"
     descriptors_topic: "/features/descriptors"
     keypoints_topic: "/features/keypoints"
+    
+    # SIFT参数优化（水下环境）
+    sift_n_features: 200
+    sift_contrastThreshold: 0.03                     # 降低对比度阈值（水下对比度低）
+    sift_edgeThreshold: 20                           # 增加边缘阈值（更宽松）
+    sift_sigma: 1.2
 
 local_view_node:
   ros__parameters:
-    matching_algorithm: "fabmap"
-    similarity_threshold: 0.65
-    vocabulary_size: 500
+    matching_algorithm: "temporal_feature_matching"  # 时间优先匹配
+    similarity_threshold: 0.4                       # 大幅降低阈值（水下相邻帧应该很相似）
+    max_templates: 30                                # 减少模板数，重点关注最近的
+    enable_debug: false
+    debug_level: 0
+    min_match_count: 10                               # 降低最小匹配数要求
+    match_ratio_threshold: 0.8                       # 提高ratio test阈值（更宽松）
+    temporal_weight_factor: 3.0                     # 增强时间权重系数
+    recent_template_priority: 8                      # 优先检查最近8个模板
     descriptors_topic: "/features/descriptors"
     matches_topic: "/local_view/matches"
+    report_interval: 100             # 每100次匹配才报告一次进度
+    debug_report_interval: 300       # 调试报告间隔改为5分钟（300秒）
 
 place_cell_node:
   ros__parameters:
+    visual_similarity_threshold: 0.8                # 进一步降低place cell的阈值
+    enable_visual_debug: false
     neurons_per_dimension: 16
     update_rate: 20.0
-    odometry_topic: "/dolphin_slam/odometry"    # 修正：统一使用dolphin_slam命名空间
+    major_report_interval: 300                       # 更频繁的报告
+    spatial_scale: 2.0
+    enable_path_integration: true
+    odometry_topic: "/dolphin_slam/odometry"
     visual_match_topic: "/local_view/matches"
     activity_topic: "/place_cells/activity"
-
+    
 experience_map_node:
   ros__parameters:
     odometry_topic: "/dolphin_slam/odometry"    # 修正：统一使用dolphin_slam命名空间
     place_cell_topic: "/place_cells/activity"
     visual_match_topic: "/local_view/matches"
     match_threshold: 0.75
+    
+
+
