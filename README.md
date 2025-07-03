@@ -39,12 +39,15 @@ dolphin_slam_ws/
 │   ├── fabmap.py               # FAB-MAP 算法
 │   └── utils.py                # 工具函数
 ├── nodes/                 # ROS2 节点
+│   ├── __init__.py
 │   ├── image_processing_node.py
 │   ├── local_view_node.py
 │   ├── place_cell_node.py
 │   ├── experience_map_node.py
 │   ├── robot_state_node.py
-│   └── dataset_player_node.py
+│   ├── dataset_player_node.py
+│   ├── unified_data_controller.py    # 统一数据控制器
+│   └── system_stop_monitor.py        # 系统停止监控器
 ├── msg/                   # ROS2 消息定义
 │   ├── Descriptors.msg
 │   ├── PlaceCellActivity.msg
@@ -161,10 +164,13 @@ dolphin_slam_ws/
 
 ```mermaid
 graph TB
-    A[摄像头图像] --> B[图像处理节点]
-    C[声呐图像] --> B
-    D[IMU数据] --> E[机器人状态节点]
-    F[DVL数据] --> E
+    A[摄像头图像] --> UDC[统一数据控制器]
+    C[声呐图像] --> UDC
+    D[IMU数据] --> UDC
+    F[DVL数据] --> UDC
+    
+    UDC --> B[图像处理节点]
+    UDC --> E[机器人状态节点]
     
     B --> G[特征描述符]
     G --> H[局部视觉节点]
@@ -182,6 +188,12 @@ graph TB
     N --> O[RViz 可视化]
     L --> O
     J --> O
+    
+    SSM[系统停止监控器] --> UDC
+    SSM --> B
+    SSM --> E
+    SSM --> K
+    SSM --> M
 ```
 
 ## 📊 支持数据集
@@ -390,11 +402,17 @@ experience_map:
 ros2 node list
 ros2 topic hz /dolphin_slam/place_cells/activity
 
+# 系统状态监控
+ros2 run dolphin_slam system_stop_monitor.py
+
 # 性能分析
 ros2 run dolphin_slam slam_monitor.py
 
 # 数据集分析
 ros2 run dolphin_slam analyze_dataset.py /path/to/dataset
+
+# 统一数据控制器状态
+ros2 topic echo /unified_controller/status
 ```
 
 ## 🔧 参数配置
