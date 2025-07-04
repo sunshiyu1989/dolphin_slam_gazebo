@@ -215,10 +215,11 @@ class PlaceCellNode(Node):
             self.visual_similarities = self.visual_similarities[-100:]
     
     def inject_position_input(self, world_position):
-        """注入位置输入 - 增强调试版"""
+        """
+        保守的位置输入注入 - 避免过度激活
+        """
         neuron_pos = self._world_to_neuron_coords(world_position)
         
-        # 🔧 调试输出坐标转换
         if self.enable_position_debug:
             self.get_logger().info(
                 f'📍 坐标转换: 世界({world_position[0]:.2f}, {world_position[1]:.2f}, {world_position[2]:.2f}) '
@@ -226,24 +227,35 @@ class PlaceCellNode(Node):
             )
         
         if self._is_valid_neuron_position(neuron_pos):
-            # 🔧 使用覆盖强度
-            actual_strength = self.position_input_override
-            self._inject_gaussian_activity(neuron_pos, 
-                                         strength=actual_strength, 
-                                         radius=1.5)
+            # 🔧 检查当前激活状态
+            current_peak = np.max(self.activity)
+            current_activation_rate = np.sum(self.activity > self.activity_threshold) / self.total_neurons
             
-            # 🔧 额外的中心跟踪机制
-            self._apply_center_tracking(neuron_pos)
+            # 🔧 动态调整输入强度
+            if current_peak > 10.0 or current_activation_rate > 0.4:
+                # 网络过度激活，减少输入
+                input_strength = self.position_input_override * 0.3
+            elif current_peak < 2.0 or current_activation_rate < 0.1:
+                # 网络活动不足，增加输入
+                input_strength = self.position_input_override * 1.5
+            else:
+                # 网络状态正常
+                input_strength = self.position_input_override
+            
+            # 🔧 保守的活动注入
+            self._inject_gaussian_activity(neuron_pos, 
+                                        strength=input_strength, 
+                                        radius=1.5)
+            
+            # 🔧 轻微的中心跟踪
+            if current_activation_rate < 0.3:  # 只有在激活率不太高时才跟踪
+                self._apply_center_tracking(neuron_pos)
             
             if self.enable_position_debug:
                 self.get_logger().info(
-                    f'💉 位置输入: 注入强度={actual_strength:.1f}, 位置=({neuron_pos[0]:.1f}, {neuron_pos[1]:.1f}, {neuron_pos[2]:.1f})'
+                    f'💉 位置输入: 强度={input_strength:.1f}, 当前峰值={current_peak:.1f}, 激活率={current_activation_rate:.1%}'
                 )
-        else:
-            if self.enable_position_debug:
-                self.get_logger().warn(
-                    f'⚠️ 无效神经元位置: ({neuron_pos[0]:.2f}, {neuron_pos[1]:.2f}, {neuron_pos[2]:.2f})'
-                )
+
     
     def _apply_center_tracking(self, target_neuron_pos):
         """应用中心跟踪机制 - 强制移动活动中心"""
@@ -298,63 +310,128 @@ class PlaceCellNode(Node):
             self.get_logger().error(f'网络更新错误: {e}')
     
     def _apply_balanced_can_dynamics(self):
-        """应用平衡的CAN动力学"""
+        """
+        精确平衡的CAN动力学 - 第二版修复
         
-        # 步骤1: 很轻微的衰减
-        self.activity *= (1.0 - self.decay_rate)
+        目标：
+        - 保持峰值活动在6-8范围内
+        - 保持激活率在15-25%范围内
+        - 允许神经元中心动态变化
+        """
         
-        # 步骤2: 局部兴奋
+        # 🔧 步骤1: 检查当前状态
+        current_peak = np.max(self.activity)
+        current_sum = np.sum(self.activity)
+        active_neurons = np.sum(self.activity > self.activity_threshold)
+        activation_rate = active_neurons / self.total_neurons
+        
+        # 🔧 步骤2: 动态调整衰减率
+        if current_peak > 10.0:  # 如果峰值过高
+            decay_multiplier = 2.0  # 增加衰减
+        elif current_peak < 2.0:  # 如果峰值过低
+            decay_multiplier = 0.5  # 减少衰减
+        else:
+            decay_multiplier = 1.0  # 正常衰减
+        
+        self.activity *= (1.0 - self.decay_rate * decay_multiplier)
+        
+        # 🔧 步骤3: 动态调整兴奋强度
+        if activation_rate > 0.5:  # 激活率过高
+            excitation_multiplier = 0.3  # 大幅减少兴奋
+        elif activation_rate < 0.1:  # 激活率过低
+            excitation_multiplier = 1.5  # 增加兴奋
+        else:
+            excitation_multiplier = 0.8  # 适度兴奋
+        
         excitatory_input = gaussian_filter(
             self.activity, 
             sigma=self.excitation_radius, 
             mode='constant'
         )
         
-        # 步骤3: 轻微侧向抑制
+        # 🔧 步骤4: 动态调整抑制强度
+        if activation_rate > 0.4:  # 激活率过高
+            inhibition_multiplier = 2.0  # 增加抑制
+        elif activation_rate < 0.15:  # 激活率过低
+            inhibition_multiplier = 0.5  # 减少抑制
+        else:
+            inhibition_multiplier = 1.0  # 正常抑制
+        
         lateral_inhibition = gaussian_filter(
             self.activity, 
             sigma=self.lateral_inhibition_radius, 
             mode='constant'
         )
         
-        # 步骤4: 适度全局抑制
+        # 🔧 步骤5: 动态全局抑制
         global_activity = np.sum(self.activity)
         global_inhibition = (
             self.inhibition_strength * 
             self.global_inhibition_factor * 
+            inhibition_multiplier *  # 🔧 动态调整
             global_activity / self.total_neurons
         )
         
-        # 步骤5: 轻微胜者通吃
+        # 🔧 步骤6: 智能胜者通吃
         max_activity = np.max(self.activity)
-        if max_activity > 0:
+        if max_activity > 0 and activation_rate > 0.3:  # 只有在激活率过高时才应用
             winner_mask = self.activity < (max_activity * self.winner_take_all_strength)
         else:
             winner_mask = np.zeros_like(self.activity, dtype=bool)
         
-        # 步骤6: 更新方程
+        # 🔧 步骤7: 精确更新方程
+        noise_strength = 0.005 if current_peak < 8.0 else 0.001  # 动态噪声
+        
         new_activity = (
-            self.activity +                              # 保持当前活动
-            excitatory_input * 1.2 +                     # 🔧 增强局部兴奋
-            -lateral_inhibition * 0.1 +                  # 🔧 减少侧向抑制
-            -global_inhibition * 0.5 +                   # 🔧 减少全局抑制
-            np.random.normal(0, 0.01, self.activity.shape)  # 适度噪声
+            self.activity * 0.8 +                        # 🔧 保留80%原始活动
+            excitatory_input * excitation_multiplier +   # 🔧 动态兴奋
+            -lateral_inhibition * 0.3 * inhibition_multiplier +  # 🔧 动态侧向抑制
+            -global_inhibition +                         # 🔧 动态全局抑制
+            np.random.normal(0, noise_strength, self.activity.shape)  # 🔧 动态噪声
         )
         
-        # 步骤7: 轻微胜者通吃
-        new_activity[winner_mask] *= 0.8  # 🔧 减少抑制强度
+        # 🔧 步骤8: 应用胜者通吃
+        if np.sum(winner_mask) > 0:
+            new_activity[winner_mask] *= 0.7
         
-        # 步骤8: 非线性激活
+        # 🔧 步骤9: 非线性激活
         new_activity = np.maximum(0, new_activity)
         
-        # 步骤9: 归一化
-        if np.max(new_activity) > 0:
-            new_activity = new_activity / np.max(new_activity) * self.normalization_factor
+        # 🔧 步骤10: 智能归一化
+        max_new_activity = np.max(new_activity)
+        if max_new_activity > 0:
+            if max_new_activity > 12.0:  # 过度激活
+                # 强制归一化
+                new_activity = new_activity / max_new_activity * 6.0
+            elif max_new_activity > 8.0:  # 适度过高
+                # 轻微压缩
+                new_activity = new_activity / max_new_activity * 7.0
+            # 否则保持原样
         
-        # 步骤10: 保留更多活动
-        new_activity[new_activity < 0.005] = 0  # 🔧 降低清零阈值
+        # 🔧 步骤11: 控制激活率
+        new_activation_rate = np.sum(new_activity > self.activity_threshold) / self.total_neurons
+        if new_activation_rate > 0.4:  # 激活率过高
+            # 提高阈值，减少激活神经元
+            threshold_multiplier = 1.5
+            new_activity[new_activity < self.activity_threshold * threshold_multiplier] = 0
         
-        self.activity = new_activity
+        # 🔧 步骤12: 温和更新
+        mixing_ratio = 0.7  # 70%新活动
+        self.activity = mixing_ratio * new_activity + (1 - mixing_ratio) * self.activity
+        
+        # 🔧 步骤13: 最终安全检查
+        final_peak = np.max(self.activity)
+        final_activation_rate = np.sum(self.activity > self.activity_threshold) / self.total_neurons
+        
+        if final_peak > 15.0 or final_activation_rate > 0.6:
+            # 紧急重置
+            self.activity *= 0.5
+            center = self._get_activity_center()
+            self.activity.fill(0)
+            self._inject_gaussian_activity(center, strength=3.0, radius=1.0)
+            
+            if self.enable_position_debug:
+                self.get_logger().warn(f"🚨 网络紧急重置: 峰值={final_peak:.1f}, 激活率={final_activation_rate:.1%}")
     
     def _compute_activation_stats(self):
         """计算激活统计"""
