@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """
-调试增强版place_cell_node.py - 解决神经元中心不移动的问题
+Dolphin SLAM - 位置细胞网络节点 (最终修复版)
+解决了所有已知的跟踪和重置问题
 """
 
 import rclpy
@@ -13,7 +14,7 @@ from typing import Optional
 import time
 
 class PlaceCellNode(Node):
-    """调试增强版位置细胞网络节点"""
+    """最终修复版位置细胞网络节点"""
     
     def __init__(self):
         super().__init__('place_cell_node')
@@ -28,7 +29,7 @@ class PlaceCellNode(Node):
                 ('neurons_per_dimension', 16),
                 ('update_rate', 20.0),
                 ('major_report_interval', 300),
-                ('spatial_scale', 2.0),
+                ('spatial_scale', 30.0),
                 ('visual_similarity_threshold', 0.4),
                 ('enable_path_integration', True),
                 ('enable_visual_debug', False),
@@ -43,15 +44,15 @@ class PlaceCellNode(Node):
                 ('global_inhibition_factor', 0.5),
                 ('winner_take_all_strength', 0.3),
                 ('lateral_inhibition_radius', 2.0),
-                ('decay_rate', 0.02),
+                ('decay_rate', 0.12),  # 🔧 增加衰减率，减少惯性
                 # 输入强度参数
                 ('position_input_strength', 4.0),
                 ('visual_input_strength', 2.0),
-                # 🔧 新增调试参数
-                ('movement_threshold', 0.05),              # 🔧 降低移动检测阈值
-                ('enable_position_debug', True),           # 🔧 启用位置调试
-                ('position_input_override', 8.0),          # 🔧 位置输入覆盖强度
-                ('center_tracking_strength', 0.7),         # 🔧 中心跟踪强度
+                # 🔧 增强的调试参数
+                ('movement_threshold', 0.05),
+                ('enable_position_debug', True),
+                ('position_input_override', 40.0),  # 🔧 增强输入强度
+                ('center_tracking_strength', 0.7),
             ]
         )
         
@@ -94,7 +95,11 @@ class PlaceCellNode(Node):
         self.position_updates = 0
         self.visual_updates = 0
         
-        # 🔧 新增：位置追踪变量
+        # 🔧 增强的位置追踪变量
+        self.last_true_position = None  # 跟踪最后的真实位置
+        self.center_history = []        # 活动中心历史
+        self.max_center_history = 5     # 历史记录长度
+        self.reset_count = 0            # 重置计数器
         self.position_history = []
         self.movement_distances = []
         self.last_injection_time = 0
@@ -102,6 +107,7 @@ class PlaceCellNode(Node):
         # 视觉更新限制
         self.last_visual_update_time = 0
         self.last_visual_similarity = 0.0
+        self.visual_similarities = []
         
         # 初始化CAN网络
         self.total_neurons = self.neurons_per_dimension ** 3
@@ -110,9 +116,6 @@ class PlaceCellNode(Node):
         # 🔧 更强的初始活动峰
         center = self.neurons_per_dimension // 2
         self._inject_gaussian_activity((center, center, center), strength=3.0, radius=1.2)
-        
-        # 视觉状态跟踪
-        self.visual_similarities = []
         
         # 订阅者
         self.odometry_sub = self.create_subscription(
@@ -137,54 +140,75 @@ class PlaceCellNode(Node):
         )
         
         # 定时器
-        self.update_timer = self.create_timer(0.05, self.update_network)  # 20Hz
+        self.update_timer = self.create_timer(
+            1.0 / self.get_parameter('update_rate').value,
+            self.update_network
+        )
         
-        self.get_logger().info(f'🧠 调试增强版CAN网络启动')
-        self.get_logger().info(f'移动检测阈值: {self.movement_threshold}m, 位置调试: {self.enable_position_debug}')
-        
+        self.get_logger().info(
+            f'🧠 位置细胞网络已启动: {self.neurons_per_dimension}³神经元, '
+            f'空间尺度={self.spatial_scale}m'
+        )
+    
     def odometry_callback(self, msg: Odometry):
-        """处理里程计数据 - 增强调试版"""
-        self.last_odometry = msg
-        
-        position = np.array([
-            msg.pose.pose.position.x,
-            msg.pose.pose.position.y,
-            msg.pose.pose.position.z
-        ])
-        
-        if self.origin_position is None:
-            self.origin_position = position.copy()
-            self.get_logger().info(f'设置原点: ({position[0]:.2f}, {position[1]:.2f}, {position[2]:.2f})')
-        
-        relative_position = position - self.origin_position
-        
-        # 🔧 更敏感的移动检测
-        movement_distance = np.linalg.norm(relative_position - self.last_position)
-        
-        if movement_distance > self.movement_threshold:
-            self.last_position = relative_position.copy()
-            self.position_updates += 1
+        """处理里程计数据 - 增强版"""
+        try:
+            self.last_odometry = msg
             
-            # 🔧 记录移动历史
-            self.position_history.append(relative_position.copy())
-            self.movement_distances.append(movement_distance)
+            # 提取位置
+            position = np.array([
+                msg.pose.pose.position.x,
+                msg.pose.pose.position.y,
+                msg.pose.pose.position.z
+            ])
             
-            # 保留最近50个位置
-            if len(self.position_history) > 50:
-                self.position_history = self.position_history[-50:]
-                self.movement_distances = self.movement_distances[-50:]
+            # 🔧 保存真实位置
+            self.last_true_position = position.copy()
             
-            if self.enable_path_integration:
+            # 🔧 坐标转换验证
+            if self.enable_position_debug and self.position_updates % 100 == 0:
+                self.verify_coordinate_conversion(position, " (里程计)")
+            
+            # 设置原点
+            if self.origin_position is None:
+                self.origin_position = position.copy()
+                self.get_logger().info(f'🎯 设置原点: ({position[0]:.2f}, {position[1]:.2f}, {position[2]:.2f})')
+                return
+            
+            # 计算相对位置
+            relative_position = position - self.origin_position
+            
+            # 计算移动距离
+            movement_distance = np.linalg.norm(relative_position - self.last_position)
+            
+            # 检查是否需要更新
+            if movement_distance >= self.movement_threshold:
+                self.last_position = relative_position.copy()
+                self.position_updates += 1
+                
+                # 记录移动
+                self.position_history.append(relative_position.copy())
+                self.movement_distances.append(movement_distance)
+                if len(self.position_history) > 1000:
+                    self.position_history.pop(0)
+                    self.movement_distances.pop(0)
+                
+                # 注入位置输入
                 self.inject_position_input(relative_position)
                 
-            # 🔧 调试输出
-            if self.enable_position_debug:
-                self.get_logger().info(
-                    f'🚶 位置更新#{self.position_updates}: '
-                    f'移动距离={movement_distance:.3f}m, '
-                    f'当前位置=({relative_position[0]:.2f}, {relative_position[1]:.2f}, {relative_position[2]:.2f})'
-                )
-        
+                if self.enable_position_debug:
+                    self.get_logger().info(
+                        f'🚶 位置更新#{self.position_updates}: '
+                        f'移动距离={movement_distance:.3f}m, '
+                        f'当前位置=({relative_position[0]:.2f}, {relative_position[1]:.2f}, {relative_position[2]:.2f})'
+                    )
+            
+            # 🔧 添加位置跟踪监控
+            self.monitor_position_tracking()
+            
+        except Exception as e:
+            self.get_logger().error(f'里程计处理错误: {e}')
+    
     def visual_match_callback(self, msg: Float32MultiArray):
         """处理视觉匹配数据"""
         if len(msg.data) == 0:
@@ -215,9 +239,7 @@ class PlaceCellNode(Node):
             self.visual_similarities = self.visual_similarities[-100:]
     
     def inject_position_input(self, world_position):
-        """
-        保守的位置输入注入 - 避免过度激活
-        """
+        """强化版位置输入注入 - 解决跟踪滞后问题"""
         neuron_pos = self._world_to_neuron_coords(world_position)
         
         if self.enable_position_debug:
@@ -227,211 +249,332 @@ class PlaceCellNode(Node):
             )
         
         if self._is_valid_neuron_position(neuron_pos):
-            # 🔧 检查当前激活状态
             current_peak = np.max(self.activity)
             current_activation_rate = np.sum(self.activity > self.activity_threshold) / self.total_neurons
             
-            # 🔧 动态调整输入强度
+            # 🔧 大幅增强位置输入强度
+            base_strength = 25.0  # 固定强度，确保能主导网络活动
+            
             if current_peak > 10.0 or current_activation_rate > 0.4:
-                # 网络过度激活，减少输入
-                input_strength = self.position_input_override * 0.3
+                input_strength = base_strength * 0.8  # 20.0
             elif current_peak < 2.0 or current_activation_rate < 0.1:
-                # 网络活动不足，增加输入
-                input_strength = self.position_input_override * 1.5
+                input_strength = base_strength * 1.5  # 37.5
             else:
-                # 网络状态正常
-                input_strength = self.position_input_override
-            
-            # 🔧 保守的活动注入
-            self._inject_gaussian_activity(neuron_pos, 
-                                        strength=input_strength, 
-                                        radius=1.5)
-            
-            # 🔧 轻微的中心跟踪
-            if current_activation_rate < 0.3:  # 只有在激活率不太高时才跟踪
-                self._apply_center_tracking(neuron_pos)
+                input_strength = base_strength  # 25.0
             
             if self.enable_position_debug:
                 self.get_logger().info(
-                    f'💉 位置输入: 强度={input_strength:.1f}, 当前峰值={current_peak:.1f}, 激活率={current_activation_rate:.1%}'
+                    f'💉 位置输入: 强度={input_strength}, 当前峰值={current_peak:.1f}, 激活率={current_activation_rate:.1%}'
                 )
-
-    
-    def _apply_center_tracking(self, target_neuron_pos):
-        """应用中心跟踪机制 - 强制移动活动中心"""
-        current_center = self._get_activity_center()
-        
-        # 计算从当前中心到目标位置的方向
-        direction = np.array(target_neuron_pos) - current_center
-        
-        # 沿着方向移动活动峰
-        for i in range(3):  # 分3步移动
-            intermediate_pos = current_center + direction * (i + 1) / 3.0
             
-            # 确保在有效范围内
-            intermediate_pos = np.clip(intermediate_pos, 0, self.neurons_per_dimension - 1)
-            
-            # 在中间位置注入活动
-            self._inject_gaussian_activity(
-                intermediate_pos, 
-                strength=self.center_tracking_strength * (i + 1), 
-                radius=1.0
-            )
+            # 🔧 强化位置注入
+            self._inject_strong_position_activity(neuron_pos, input_strength)
     
-    def inject_visual_input(self, visual_strength):
+    def _inject_strong_position_activity(self, center_pos, strength):
+        """强化版位置活动注入 - 主导性输入"""
+        # 🔧 步骤1: 在目标位置注入强活动
+        self._inject_gaussian_activity(center_pos, strength=strength/3.0, radius=1.2)
+        
+        # 🔧 步骤2: 抑制远离目标的活动
+        x, y, z = np.meshgrid(
+            np.arange(self.neurons_per_dimension),
+            np.arange(self.neurons_per_dimension),
+            np.arange(self.neurons_per_dimension),
+            indexing='ij'
+        )
+        
+        # 计算距离目标位置的距离
+        dist_from_target = np.sqrt(
+            (x - center_pos[0])**2 + 
+            (y - center_pos[1])**2 + 
+            (z - center_pos[2])**2
+        )
+        
+        # 对距离目标较远的区域施加抑制
+        inhibition_mask = dist_from_target > 2.0  # 距离超过2个神经元单位
+        inhibition_strength = 0.3
+        self.activity[inhibition_mask] *= (1.0 - inhibition_strength)
+        
+        # 确保非负
+        self.activity = np.maximum(self.activity, 0)
+    
+    def inject_visual_input(self, similarity):
         """注入视觉输入"""
-        if visual_strength > self.visual_threshold:
-            max_pos = np.unravel_index(np.argmax(self.activity), self.activity.shape)
-            self._inject_gaussian_activity(max_pos, 
-                                         strength=visual_strength * self.visual_input_strength, 
-                                         radius=0.8)
+        if similarity > self.visual_threshold:
+            visual_strength = similarity * self.visual_input_strength
+            
+            # 在当前活动中心附近增强活动
+            activity_center = self._get_activity_center()
+            self._inject_gaussian_activity(activity_center, strength=visual_strength, radius=1.5)
     
     def update_network(self):
-        """更新网络"""
+        """网络更新主循环"""
         try:
             self.update_count += 1
             
             # 应用CAN动力学
-            self._apply_balanced_can_dynamics()
+            self._apply_enhanced_can_dynamics()
             
-            # 计算统计
-            stats = self._compute_activation_stats()
-            
-            # 发布活动
-            msg = Float32MultiArray()
-            msg.data = self.activity.flatten().tolist()
-            self.activity_pub.publish(msg)
+            # 发布活动数据
+            self._publish_activity()
             
             # 定期报告
             if self.update_count % self.major_interval == 0:
+                stats = self._compute_activation_stats()
                 self._report_network_status(stats)
                 
         except Exception as e:
             self.get_logger().error(f'网络更新错误: {e}')
     
-    def _apply_balanced_can_dynamics(self):
-        """
-        精确平衡的CAN动力学 - 第二版修复
+    def _apply_enhanced_can_dynamics(self):
+        """增强版CAN动力学 - 减少惯性，提高响应性"""
         
-        目标：
-        - 保持峰值活动在6-8范围内
-        - 保持激活率在15-25%范围内
-        - 允许神经元中心动态变化
-        """
+        # 🔧 步骤1: 增强衰减，减少网络"记忆"
+        enhanced_decay = self.decay_rate * 1.2  # 进一步增加衰减
+        self.activity *= (1.0 - enhanced_decay)
         
-        # 🔧 步骤1: 检查当前状态
-        current_peak = np.max(self.activity)
-        current_sum = np.sum(self.activity)
-        active_neurons = np.sum(self.activity > self.activity_threshold)
-        activation_rate = active_neurons / self.total_neurons
-        
-        # 🔧 步骤2: 动态调整衰减率
-        if current_peak > 10.0:  # 如果峰值过高
-            decay_multiplier = 2.0  # 增加衰减
-        elif current_peak < 2.0:  # 如果峰值过低
-            decay_multiplier = 0.5  # 减少衰减
-        else:
-            decay_multiplier = 1.0  # 正常衰减
-        
-        self.activity *= (1.0 - self.decay_rate * decay_multiplier)
-        
-        # 🔧 步骤3: 动态调整兴奋强度
-        if activation_rate > 0.5:  # 激活率过高
-            excitation_multiplier = 0.3  # 大幅减少兴奋
-        elif activation_rate < 0.1:  # 激活率过低
-            excitation_multiplier = 1.5  # 增加兴奋
-        else:
-            excitation_multiplier = 0.8  # 适度兴奋
-        
+        # 🔧 步骤2: 应用兴奋性滤波
         excitatory_input = gaussian_filter(
             self.activity, 
             sigma=self.excitation_radius, 
             mode='constant'
         )
         
-        # 🔧 步骤4: 动态调整抑制强度
-        if activation_rate > 0.4:  # 激活率过高
-            inhibition_multiplier = 2.0  # 增加抑制
-        elif activation_rate < 0.15:  # 激活率过低
-            inhibition_multiplier = 0.5  # 减少抑制
-        else:
-            inhibition_multiplier = 1.0  # 正常抑制
-        
+        # 🔧 步骤3: 应用侧向抑制
         lateral_inhibition = gaussian_filter(
             self.activity, 
             sigma=self.lateral_inhibition_radius, 
             mode='constant'
         )
         
-        # 🔧 步骤5: 动态全局抑制
+        # 🔧 步骤4: 全局抑制
         global_activity = np.sum(self.activity)
         global_inhibition = (
             self.inhibition_strength * 
             self.global_inhibition_factor * 
-            inhibition_multiplier *  # 🔧 动态调整
             global_activity / self.total_neurons
         )
         
-        # 🔧 步骤6: 智能胜者通吃
-        max_activity = np.max(self.activity)
-        if max_activity > 0 and activation_rate > 0.3:  # 只有在激活率过高时才应用
-            winner_mask = self.activity < (max_activity * self.winner_take_all_strength)
-        else:
-            winner_mask = np.zeros_like(self.activity, dtype=bool)
-        
-        # 🔧 步骤7: 精确更新方程
-        noise_strength = 0.005 if current_peak < 8.0 else 0.001  # 动态噪声
-        
+        # 🔧 步骤5: 网络更新方程
         new_activity = (
-            self.activity * 0.8 +                        # 🔧 保留80%原始活动
-            excitatory_input * excitation_multiplier +   # 🔧 动态兴奋
-            -lateral_inhibition * 0.3 * inhibition_multiplier +  # 🔧 动态侧向抑制
-            -global_inhibition +                         # 🔧 动态全局抑制
-            np.random.normal(0, noise_strength, self.activity.shape)  # 🔧 动态噪声
+            self.activity * 0.7 +                     # 保留70%原始活动
+            excitatory_input * 0.8 +                  # 兴奋性输入
+            -lateral_inhibition * 0.3 +               # 侧向抑制
+            -global_inhibition                        # 全局抑制
         )
         
-        # 🔧 步骤8: 应用胜者通吃
-        if np.sum(winner_mask) > 0:
-            new_activity[winner_mask] *= 0.7
-        
-        # 🔧 步骤9: 非线性激活
+        # 🔧 步骤6: 非线性激活
         new_activity = np.maximum(0, new_activity)
         
-        # 🔧 步骤10: 智能归一化
-        max_new_activity = np.max(new_activity)
-        if max_new_activity > 0:
-            if max_new_activity > 12.0:  # 过度激活
-                # 强制归一化
-                new_activity = new_activity / max_new_activity * 6.0
-            elif max_new_activity > 8.0:  # 适度过高
-                # 轻微压缩
-                new_activity = new_activity / max_new_activity * 7.0
-            # 否则保持原样
+        # 🔧 步骤7: 防止过度激活
+        max_activity = np.max(new_activity)
+        if max_activity > 15.0:
+            new_activity = new_activity / max_activity * 12.0
         
-        # 🔧 步骤11: 控制激活率
-        new_activation_rate = np.sum(new_activity > self.activity_threshold) / self.total_neurons
-        if new_activation_rate > 0.4:  # 激活率过高
-            # 提高阈值，减少激活神经元
-            threshold_multiplier = 1.5
-            new_activity[new_activity < self.activity_threshold * threshold_multiplier] = 0
+        # 🔧 步骤8: 更新活动
+        self.activity = new_activity
         
-        # 🔧 步骤12: 温和更新
-        mixing_ratio = 0.7  # 70%新活动
-        self.activity = mixing_ratio * new_activity + (1 - mixing_ratio) * self.activity
+        # 🔧 步骤9: 位置校正机制
+        self._apply_position_correction()
         
-        # 🔧 步骤13: 最终安全检查
+        # 🔧 步骤10: 最终安全检查（极少触发的重置）
         final_peak = np.max(self.activity)
         final_activation_rate = np.sum(self.activity > self.activity_threshold) / self.total_neurons
         
-        if final_peak > 15.0 or final_activation_rate > 0.6:
-            # 紧急重置
-            self.activity *= 0.5
-            center = self._get_activity_center()
-            self.activity.fill(0)
-            self._inject_gaussian_activity(center, strength=3.0, radius=1.0)
+        if final_peak > 50.0 or final_activation_rate > 0.95:  # 极高阈值
+            self._emergency_reset()
+    
+    def _apply_position_correction(self):
+        """位置校正机制 - 防止过度偏离"""
+        if self.last_true_position is None:
+            return
+            
+        true_neuron_pos = self._world_to_neuron_coords(self.last_true_position)
+        if not self._is_valid_neuron_position(true_neuron_pos):
+            return
+        
+        # 计算当前活动中心与真实位置的偏差
+        current_center = self._get_activity_center()
+        deviation = np.linalg.norm(current_center - true_neuron_pos)
+        
+        # 如果偏差过大，施加"拉回力"
+        if deviation > 1.0:  # 超过1个神经元单位的偏差
+            pull_strength = min(deviation * 3.0, 10.0)  # 拉回强度
+            self._inject_gaussian_activity(
+                true_neuron_pos, 
+                strength=pull_strength, 
+                radius=0.8
+            )
+            
+            if self.enable_position_debug and deviation > 2.0:
+                decoded_world = self._neuron_to_world_coords(current_center)
+                self.get_logger().info(
+                    f"🎯 位置校正: 偏差={deviation:.2f}, 拉回强度={pull_strength:.1f}, "
+                    f"解码位置=({decoded_world[0]:.1f},{decoded_world[1]:.1f},{decoded_world[2]:.1f}), "
+                    f"真实位置=({self.last_true_position[0]:.1f},{self.last_true_position[1]:.1f},{self.last_true_position[2]:.1f})"
+                )
+    
+    def _emergency_reset(self):
+        """紧急重置 - 使用真实位置"""
+        self.reset_count += 1
+        
+        if self.enable_position_debug:
+            final_peak = np.max(self.activity)
+            final_activation_rate = np.sum(self.activity > self.activity_threshold) / self.total_neurons
+            self.get_logger().warn(
+                f"🚨 网络紧急重置#{self.reset_count}: 峰值={final_peak:.1f}, "
+                f"激活率={final_activation_rate:.1%}"
+            )
+        
+        if self.last_true_position is not None:
+            # 🔧 直接计算，避免函数调用可能的参数问题
+            true_neuron_pos = self.last_true_position / self.spatial_scale + (self.neurons_per_dimension / 2)
             
             if self.enable_position_debug:
-                self.get_logger().warn(f"🚨 网络紧急重置: 峰值={final_peak:.1f}, 激活率={final_activation_rate:.1%}")
+                self.get_logger().info(
+                    f"🔍 重置调试: 真实位置{self.last_true_position} "
+                    f"→ 神经元{true_neuron_pos} (scale={self.spatial_scale})"
+                )
+            
+            if self._is_valid_neuron_position(true_neuron_pos):
+                self.activity.fill(0)
+                self._inject_gaussian_activity(true_neuron_pos, strength=4.0, radius=1.2)
+                
+                # 验证重置后的解码
+                verification_world = (true_neuron_pos - self.neurons_per_dimension/2) * self.spatial_scale
+                if self.enable_position_debug:
+                    self.get_logger().info(
+                        f"✅ 重置验证: 神经元{true_neuron_pos} → 世界{verification_world}"
+                    )
+            else:
+                # 使用安全的中心位置
+                center = np.array([self.neurons_per_dimension/2] * 3)
+                self.activity.fill(0)
+                self._inject_gaussian_activity(center, strength=4.0, radius=1.2)
+        else:
+            # 使用默认中心
+            center = np.array([self.neurons_per_dimension/2] * 3)
+            self.activity.fill(0)
+            self._inject_gaussian_activity(center, strength=4.0, radius=1.2)
+    
+    def monitor_position_tracking(self):
+        """监控位置跟踪精度"""
+        if (self.last_true_position is not None and 
+            self.enable_position_debug and 
+            self.position_updates % 50 == 0):  # 每50次更新监控一次
+            
+            # 计算跟踪误差
+            activity_center = self._get_activity_center()
+            decoded_world = self._neuron_to_world_coords(activity_center)
+            
+            error = np.linalg.norm(decoded_world - self.last_true_position)
+            error_x = abs(decoded_world[0] - self.last_true_position[0])
+            error_y = abs(decoded_world[1] - self.last_true_position[1])
+            error_z = abs(decoded_world[2] - self.last_true_position[2])
+            
+            self.get_logger().info(
+                f"📊 跟踪精度监控: 总误差={error:.2f}m, "
+                f"X误差={error_x:.2f}m, Y误差={error_y:.2f}m, Z误差={error_z:.2f}m"
+            )
+            
+            # 如果Y方向误差过大，发出警告
+            if error_y > 3.0:
+                self.get_logger().warn(
+                    f"⚠️ Y方向跟踪误差过大: {error_y:.2f}m，建议调整参数"
+                )
+    
+    def verify_coordinate_conversion(self, world_pos, description=""):
+        """验证坐标转换的正确性"""
+        if not self.enable_position_debug:
+            return
+            
+        neuron_pos = self._world_to_neuron_coords(world_pos)
+        recovered_world = self._neuron_to_world_coords(neuron_pos)
+        error = np.linalg.norm(world_pos - recovered_world)
+        
+        self.get_logger().info(
+            f"🔍 坐标验证{description}: "
+            f"世界{world_pos} → 神经元{neuron_pos} → 世界{recovered_world}, "
+            f"误差={error:.6f}"
+        )
+        
+        if error > 0.001:
+            self.get_logger().error(f"❌ 坐标转换误差过大: {error:.6f}")
+    
+    def _publish_activity(self):
+        """发布活动数据"""
+        try:
+            activity_msg = Float32MultiArray()
+            activity_msg.data = self.activity.flatten().tolist()
+            self.activity_pub.publish(activity_msg)
+        except Exception as e:
+            self.get_logger().error(f'发布活动数据错误: {e}')
+    
+    def _inject_gaussian_activity(self, center_pos, strength=1.0, radius=1.0):
+        """注入高斯活动"""
+        x, y, z = np.meshgrid(
+            np.arange(self.neurons_per_dimension),
+            np.arange(self.neurons_per_dimension),
+            np.arange(self.neurons_per_dimension),
+            indexing='ij'
+        )
+        
+        dist_sq = ((x - center_pos[0])**2 + 
+                   (y - center_pos[1])**2 + 
+                   (z - center_pos[2])**2)
+        
+        gaussian = strength * np.exp(-dist_sq / (2 * radius**2))
+        self.activity += gaussian
+    
+    def _get_activity_center(self):
+        """计算活动中心 - 带历史平滑"""
+        if np.max(self.activity) == 0:
+            return np.array([self.neurons_per_dimension/2] * 3)
+        
+        x, y, z = np.meshgrid(
+            np.arange(self.neurons_per_dimension),
+            np.arange(self.neurons_per_dimension), 
+            np.arange(self.neurons_per_dimension),
+            indexing='ij'
+        )
+        
+        total_activity = np.sum(self.activity)
+        if total_activity > 0:
+            center_x = np.sum(x * self.activity) / total_activity
+            center_y = np.sum(y * self.activity) / total_activity
+            center_z = np.sum(z * self.activity) / total_activity
+            current_center = np.array([center_x, center_y, center_z])
+            
+            # 🔧 添加历史平滑
+            self.center_history.append(current_center)
+            if len(self.center_history) > self.max_center_history:
+                self.center_history.pop(0)
+            
+            # 如果有足够历史，使用平滑后的中心
+            if len(self.center_history) >= 3:
+                smoothed_center = np.mean(self.center_history[-3:], axis=0)
+                return smoothed_center
+            
+            return current_center
+        else:
+            return np.array([self.neurons_per_dimension/2] * 3)
+    
+    def _world_to_neuron_coords(self, world_pos):
+        """世界坐标到神经元坐标转换"""
+        neuron_pos = world_pos / self.spatial_scale
+        center_offset = self.neurons_per_dimension / 2
+        neuron_coords = neuron_pos + center_offset
+        return neuron_coords
+    
+    def _neuron_to_world_coords(self, neuron_pos):
+        """神经元坐标到世界坐标转换"""
+        center_offset = self.neurons_per_dimension / 2
+        world_pos = (neuron_pos - center_offset) * self.spatial_scale
+        return world_pos
+    
+    def _is_valid_neuron_position(self, neuron_pos):
+        """检查位置有效性"""
+        return all(0 <= pos < self.neurons_per_dimension for pos in neuron_pos)
     
     def _compute_activation_stats(self):
         """计算激活统计"""
@@ -459,7 +602,7 @@ class PlaceCellNode(Node):
         else:
             avg_visual = max_visual = 0.0
         
-        # 🔧 增强的状态指示器
+        # 状态指示器
         if stats['activation_rate'] < 0.05:
             activation_status = "⚠️"
         elif stats['activation_rate'] < 0.10:
@@ -469,7 +612,7 @@ class PlaceCellNode(Node):
         else:
             activation_status = "❌"
         
-        # 🔧 计算移动统计
+        # 计算移动统计
         if len(self.position_history) > 1:
             total_distance = sum(self.movement_distances)
             avg_distance = np.mean(self.movement_distances)
@@ -488,68 +631,13 @@ class PlaceCellNode(Node):
             f'视觉更新={self.visual_updates}次'
         )
         
-        # 🔧 额外的调试信息
+        # 额外的调试信息
         if self.enable_position_debug and len(self.position_history) > 0:
             latest_pos = self.position_history[-1]
             self.get_logger().info(
                 f'📍 位置调试: 最新位置=({latest_pos[0]:.2f}, {latest_pos[1]:.2f}, {latest_pos[2]:.2f}), '
                 f'平均移动距离={avg_distance:.3f}m'
             )
-    
-    def _inject_gaussian_activity(self, center_pos, strength=1.0, radius=1.0):
-        """注入高斯活动"""
-        x, y, z = np.meshgrid(
-            np.arange(self.neurons_per_dimension),
-            np.arange(self.neurons_per_dimension),
-            np.arange(self.neurons_per_dimension),
-            indexing='ij'
-        )
-        
-        dist_sq = ((x - center_pos[0])**2 + 
-                   (y - center_pos[1])**2 + 
-                   (z - center_pos[2])**2)
-        
-        gaussian = strength * np.exp(-dist_sq / (2 * radius**2))
-        self.activity += gaussian
-    
-    def _get_activity_center(self):
-        """计算活动中心"""
-        if np.max(self.activity) == 0:
-            return np.array([self.neurons_per_dimension/2] * 3)
-        
-        x, y, z = np.meshgrid(
-            np.arange(self.neurons_per_dimension),
-            np.arange(self.neurons_per_dimension), 
-            np.arange(self.neurons_per_dimension),
-            indexing='ij'
-        )
-        
-        total_activity = np.sum(self.activity)
-        if total_activity > 0:
-            center_x = np.sum(x * self.activity) / total_activity
-            center_y = np.sum(y * self.activity) / total_activity
-            center_z = np.sum(z * self.activity) / total_activity
-            return np.array([center_x, center_y, center_z])
-        else:
-            return np.array([self.neurons_per_dimension/2] * 3)
-    
-    def _world_to_neuron_coords(self, world_pos):
-        """世界坐标到神经元坐标转换"""
-        # 🔧 修正坐标转换
-        neuron_pos = world_pos / self.spatial_scale
-        center_offset = self.neurons_per_dimension / 2
-        neuron_coords = neuron_pos + center_offset
-        return neuron_coords
-    
-    def _neuron_to_world_coords(self, neuron_pos):
-        """神经元坐标到世界坐标转换"""
-        center_offset = self.neurons_per_dimension / 2
-        world_pos = (neuron_pos - center_offset) * self.spatial_scale
-        return world_pos
-    
-    def _is_valid_neuron_position(self, neuron_pos):
-        """检查位置有效性"""
-        return all(0 <= pos < self.neurons_per_dimension for pos in neuron_pos)
 
 def main(args=None):
     rclpy.init(args=args)
