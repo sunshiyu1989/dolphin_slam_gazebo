@@ -1,0 +1,377 @@
+cetc3@cetc3-Legion-Y7000-IRX9:~/dolphin_slam_ws$ ./start_dolphin_slam_optimized.sh 
+🚀 启动优化版 Dolphin SLAM...
+🎮 RTX 4060 Gazebo 环境已加载
+🧹 清理环境...
+[sudo] cetc3 的密码： 
+📊 系统状态:
+GPU: NVIDIA GeForce RTX 4060 Laptop GPU, 37, 17 %
+环境: x11
+Prime: on-demand
+🌊 启动 Dolphin SLAM 水下仿真...
+[INFO] [launch]: All log files can be found below /home/cetc3/.ros/log/2025-07-09-15-13-31-142677-cetc3-Legion-Y7000-IRX9-45867
+[INFO] [launch]: Default logging verbosity is set to INFO
+[INFO] [gzserver-1]: process started with pid [45869]
+[INFO] [gzclient-2]: process started with pid [45871]
+[INFO] [robot_state_publisher-3]: process started with pid [45873]
+[INFO] [spawn_entity.py-4]: process started with pid [45875]
+[INFO] [static_transform_publisher-5]: process started with pid [45877]
+[INFO] [rviz2-6]: process started with pid [45879]
+[static_transform_publisher-5] [WARN] [1752045211.435398234] []: Old-style arguments are deprecated; see --help for new-style arguments
+[static_transform_publisher-5] [INFO] [1752045211.443022869] [static_transform_publisher_5dpw2eTN8CPa6Xhj]: Spinning until stopped - publishing transform
+[static_transform_publisher-5] translation: ('0.000000', '0.000000', '0.000000')
+[static_transform_publisher-5] rotation: ('0.000000', '0.000000', '0.000000', '1.000000')
+[static_transform_publisher-5] from 'map' to 'odom'
+[robot_state_publisher-3] [WARN] [1752045211.443272939] [kdl_parser]: The root link base_link has an inertia specified in the URDF, but KDL does not support a root link with an inertia.  As a workaround, you can add an extra dummy link to your URDF.
+[robot_state_publisher-3] [INFO] [1752045211.443318586] [robot_state_publisher]: got segment base_link
+[robot_state_publisher-3] [INFO] [1752045211.443341135] [robot_state_publisher]: got segment camera_link
+[robot_state_publisher-3] [INFO] [1752045211.443344146] [robot_state_publisher]: got segment dorsal_fin
+[robot_state_publisher-3] [INFO] [1752045211.443347185] [robot_state_publisher]: got segment dvl_link
+[robot_state_publisher-3] [INFO] [1752045211.443350310] [robot_state_publisher]: got segment gps_link
+[robot_state_publisher-3] [INFO] [1752045211.443353283] [robot_state_publisher]: got segment imu_link
+[robot_state_publisher-3] [INFO] [1752045211.443356296] [robot_state_publisher]: got segment left_fin
+[robot_state_publisher-3] [INFO] [1752045211.443359358] [robot_state_publisher]: got segment main_thruster
+[robot_state_publisher-3] [INFO] [1752045211.443361777] [robot_state_publisher]: got segment nose_cone
+[robot_state_publisher-3] [INFO] [1752045211.443363738] [robot_state_publisher]: got segment right_fin
+[robot_state_publisher-3] [INFO] [1752045211.443365663] [robot_state_publisher]: got segment sonar_link
+[spawn_entity.py-4] [INFO] [1752045211.645834873] [spawn_entity]: Spawn Entity started
+[spawn_entity.py-4] [INFO] [1752045211.646004001] [spawn_entity]: Loading entity published on topic robot_description
+[spawn_entity.py-4] [INFO] [1752045211.646877053] [spawn_entity]: Waiting for entity xml on robot_description
+[gzclient-2] Gazebo multi-robot simulator, version 11.10.2
+[gzclient-2] Copyright (C) 2012 Open Source Robotics Foundation.
+[gzclient-2] Released under the Apache 2 License.
+[gzclient-2] http://gazebosim.org
+[gzclient-2] 
+[spawn_entity.py-4] [INFO] [1752045211.657832318] [spawn_entity]: Waiting for service /spawn_entity, timeout = 30
+[spawn_entity.py-4] [INFO] [1752045211.657968900] [spawn_entity]: Waiting for service /spawn_entity
+[gzserver-1] Gazebo multi-robot simulator, version 11.10.2
+[gzserver-1] Copyright (C) 2012 Open Source Robotics Foundation.
+[gzserver-1] Released under the Apache 2 License.
+[gzserver-1] http://gazebosim.org
+[gzserver-1] 
+[rviz2-6] [INFO] [1752045211.739520191] [rviz2]: Stereo is NOT SUPPORTED
+[rviz2-6] [INFO] [1752045211.739659011] [rviz2]: OpenGl version: 4.6 (GLSL 4.6)
+[rviz2-6] [INFO] [1752045211.753664079] [rviz2]: Stereo is NOT SUPPORTED
+[rviz2-6] [INFO] [1752045211.839554762] [rviz2]: Stereo is NOT SUPPORTED
+[rviz2-6] [INFO] [1752045211.854047802] [rviz2]: Stereo is NOT SUPPORTED
+[gzserver-1] [Wrn] [gazebo_ros_init.cpp:178] 
+[gzserver-1] #     # ####### ####### ###  #####  #######
+[gzserver-1] ##    # #     #    #     #  #     # #
+[gzserver-1] # #   # #     #    #     #  #       #
+[gzserver-1] #  #  # #     #    #     #  #       #####
+[gzserver-1] #   # # #     #    #     #  #       #
+[gzserver-1] #    ## #     #    #     #  #     # #
+[gzserver-1] #     # #######    #    ###  #####  #######
+[gzserver-1] 
+[gzserver-1] This version of Gazebo, now called Gazebo classic, reaches end-of-life
+[gzserver-1] in January 2025. Users are highly encouraged to migrate to the new Gazebo
+[gzserver-1] using our migration guides (https://gazebosim.org/docs/latest/gazebo_classic_migration?utm_source=gazebo_ros_pkgs&utm_medium=cli)
+[gzserver-1] 
+[gzserver-1] 
+[spawn_entity.py-4] [INFO] [1752045212.411310031] [spawn_entity]: Calling service /spawn_entity
+[spawn_entity.py-4] [INFO] [1752045212.495192562] [spawn_entity]: Spawn status: SpawnEntity: Successfully spawned entity [auv_robot]
+[gzserver-1] [Msg] Waiting for master.
+[gzserver-1] [Msg] Connected to gazebo master @ http://127.0.0.1:11345
+[gzserver-1] [Msg] Publicized address: 127.0.0.1
+[gzserver-1] [Msg] Loading world file [/home/cetc3/dolphin_slam_ws/install/dolphin_slam/share/dolphin_slam/worlds/underwater_world_enhanced.world]
+[gzserver-1] [Wrn] [Event.cc:61] Warning: Deleting a connection right after creation. Make sure to save the ConnectionPtr from a Connect call
+[INFO] [spawn_entity.py-4]: process has finished cleanly [pid 45875]
+[gzserver-1] [INFO] [1752045213.239557460] [camera_controller]: Publishing camera info to [/forward_camera/camera_info]
+[gzserver-1] [Err] [Sensor.cc:510] Get noise index not valid
+[gzserver-1] [Err] [Sensor.cc:510] Get noise index not valid
+[gzserver-1] [Err] [Sensor.cc:510] Get noise index not valid
+[gzserver-1] [Err] [Sensor.cc:510] Get noise index not valid
+[gzserver-1] [Err] [Sensor.cc:510] Get noise index not valid
+[gzserver-1] [Err] [Sensor.cc:510] Get noise index not valid
+[gzclient-2] [Msg] Waiting for master.
+[gzclient-2] [Msg] Connected to gazebo master @ http://127.0.0.1:11345
+[gzclient-2] [Msg] Publicized address: 127.0.0.1
+[gzclient-2] [Wrn] [Event.cc:61] Warning: Deleting a connection right after creation. Make sure to save the ConnectionPtr from a Connect call
+[gzserver-1] [INFO] [1752045213.305374605] [planar_move_controller]: Subscribed to [/cmd_vel]
+[gzserver-1] [INFO] [1752045213.306274336] [planar_move_controller]: Advertise odometry on [/odom]
+[gzserver-1] [INFO] [1752045213.307273584] [planar_move_controller]: Publishing odom transforms between [odom] and [base_link]
+[INFO] [simple_odom_publisher_node-7]: process started with pid [46107]
+[INFO] [trajectory_evaluator_node-8]: process started with pid [46109]
+[INFO] [image_processing_node-9]: process started with pid [46111]
+[INFO] [local_view_node-10]: process started with pid [46113]
+[INFO] [place_cell_node-11]: process started with pid [46115]
+[INFO] [experience_map_node-12]: process started with pid [46117]
+[trajectory_evaluator_node-8] [INFO] [1752045221.684047466] [trajectory_evaluator]: 轨迹评估节点已启动
+[trajectory_evaluator_node-8] [INFO] [1752045221.684257117] [trajectory_evaluator]: GPS 原点: (29.5014, 34.9167)
+[place_cell_node-11] [INFO] [1752045221.688268403] [place_cell_node]: 🎯 初始化网络，中心位置: (8, 8, 8)
+[place_cell_node-11] [INFO] [1752045221.688492261] [place_cell_node]: 🧠 修正版位置细胞网络已启动: 16³神经元, 空间尺度=1.2m
+[experience_map_node-12] [INFO] [1752045221.697819235] [experience_map_node]: 经验地图节点已启动 - 修复版
+[simple_odom_publisher_node-7] [INFO] [1752045221.708198619] [simple_odom_publisher]: 🤖 智能里程计发布器已启动，机器人: auv_robot
+[simple_odom_publisher_node-7] [INFO] [1752045221.708387015] [simple_odom_publisher]: 📡 发布话题: /dolphin_slam/odometry
+[simple_odom_publisher_node-7] [INFO] [1752045221.708527201] [simple_odom_publisher]: ⚡ 优先使用内置里程计 /odom
+[simple_odom_publisher_node-7] [INFO] [1752045221.716783318] [simple_odom_publisher]: 🔄 已设置备用数据源: /gazebo/model_states
+[simple_odom_publisher_node-7] [INFO] [1752045221.717032813] [simple_odom_publisher]: 📊 数据源=模型状态 ❌, 内置=0, 模型=0, 发布=0条到SLAM
+[simple_odom_publisher_node-7] [INFO] [1752045221.717617216] [simple_odom_publisher]: 📍 内置里程计 #1: 位置=(0.00, 0.00, -12.10), 速度=(0.00, 0.00, 0.00)
+[image_processing_node-9] [INFO] [1752045221.945668240] [image_processing_node]: ✅ SIFT 特征检测器初始化成功
+[local_view_node-10] [INFO] [1752045221.965369132] [local_view_node]: 🌊 水下优化视觉节点启动
+[local_view_node-10] [INFO] [1752045221.965632689] [local_view_node]: 水下模式: True, 帧跳过阈值: 0.9
+[local_view_node-10] [INFO] [1752045221.965770202] [local_view_node]: 最大匹配率: 10/秒
+[image_processing_node-9] [INFO] [1752045222.033818414] [image_processing_node]: 🎯 修复版图像处理节点已启动
+[image_processing_node-9] [INFO] [1752045222.033990263] [image_processing_node]: 📷 订阅相机话题: /forward_camera/image_raw
+[image_processing_node-9] [INFO] [1752045222.034117409] [image_processing_node]: 🔍 使用特征: SIFT, 最大特征数: 1000
+[image_processing_node-9] [INFO] [1752045222.035093056] [image_processing_node]: 📊 图像处理状态: 接收1帧, 处理0帧, 处理率0.0%
+[simple_odom_publisher_node-7] [INFO] [1752045222.119269071] [simple_odom_publisher]: 📍 内置里程计 #21: 位置=(0.00, 0.00, -12.20), 速度=(0.00, 0.00, 0.00)
+[image_processing_node-9] [INFO] [1752045222.272067467] [image_processing_node]: 🔍 处理帧#1: 检测到21个特征点
+[simple_odom_publisher_node-7] [INFO] [1752045222.519357947] [simple_odom_publisher]: 📍 内置里程计 #41: 位置=(0.00, 0.00, -12.30), 速度=(0.00, 0.00, 0.00)
+[simple_odom_publisher_node-7] [INFO] [1752045222.920319034] [simple_odom_publisher]: 📍 内置里程计 #61: 位置=(0.00, 0.00, -12.40), 速度=(0.00, 0.00, 0.00)
+[image_processing_node-9] [INFO] [1752045223.217971059] [image_processing_node]: 📊 图像处理状态: 接收12帧, 处理4帧, 处理率33.3%
+[simple_odom_publisher_node-7] [INFO] [1752045223.218184556] [simple_odom_publisher]: 📊 数据源=内置里程计 ✅, 内置=75, 模型=0, 发布=75条到SLAM
+[simple_odom_publisher_node-7] [INFO] [1752045223.320553239] [simple_odom_publisher]: 📍 内置里程计 #81: 位置=(0.00, 0.00, -12.50), 速度=(0.00, 0.00, 0.00)
+[experience_map_node-12] [INFO] [1752045223.702532129] [experience_map_node]: 轨迹点数: 100
+[simple_odom_publisher_node-7] [INFO] [1752045223.721947794] [simple_odom_publisher]: 📍 内置里程计 #101: 位置=(0.00, 0.00, -12.60), 速度=(0.00, 0.00, 0.00)
+[simple_odom_publisher_node-7] [INFO] [1752045224.121139451] [simple_odom_publisher]: 📍 内置里程计 #121: 位置=(0.00, 0.00, -12.70), 速度=(0.00, 0.00, 0.00)
+[simple_odom_publisher_node-7] [INFO] [1752045224.522545471] [simple_odom_publisher]: 📍 内置里程计 #141: 位置=(0.00, 0.00, -12.80), 速度=(0.00, 0.00, 0.00)
+[simple_odom_publisher_node-7] [INFO] [1752045224.923014224] [simple_odom_publisher]: 📍 内置里程计 #161: 位置=(0.00, 0.00, -12.90), 速度=(0.00, 0.00, 0.00)
+[image_processing_node-9] [INFO] [1752045225.250815040] [image_processing_node]: 🔍 处理帧#11: 检测到14个特征点
+[simple_odom_publisher_node-7] [INFO] [1752045225.323370880] [simple_odom_publisher]: 📍 内置里程计 #181: 位置=(0.00, 0.00, -13.00), 速度=(0.00, 0.00, 0.00)
+[experience_map_node-12] [INFO] [1752045225.703550998] [experience_map_node]: 轨迹点数: 200
+[simple_odom_publisher_node-7] [INFO] [1752045225.723594208] [simple_odom_publisher]: 📍 内置里程计 #201: 位置=(0.00, 0.00, -13.10), 速度=(0.00, 0.00, 0.00)
+[simple_odom_publisher_node-7] [INFO] [1752045226.122237258] [simple_odom_publisher]: 📍 内置里程计 #221: 位置=(0.00, 0.00, -13.20), 速度=(0.00, 0.00, 0.00)
+[INFO] [simple_waypoint_controller_node-13]: process started with pid [46210]
+[simple_odom_publisher_node-7] [INFO] [1752045226.523172250] [simple_odom_publisher]: 📍 内置里程计 #241: 位置=(0.00, 0.00, -13.30), 速度=(0.00, 0.00, 0.00)
+[place_cell_node-11] [INFO] [1752045226.626145651] [place_cell_node]: 🧠 网络更新#100: 峰值=8.0000, 均值=0.1740±0.6475, 活跃=666/4096(16.3%)✅, 神经元中心=(7.6,7.9,7.9), 对应世界=(2.3,-0.1,-13.6), 位置更新=0次, 总移动距离=0.00m, 视觉更新=8次
+[simple_odom_publisher_node-7] [INFO] [1752045226.925058980] [simple_odom_publisher]: 📍 内置里程计 #261: 位置=(0.00, 0.00, -13.40), 速度=(0.00, 0.00, 0.00)
+[simple_waypoint_controller_node-13] [INFO] [1752045226.959062109] [waypoint_controller]: 🔧 调试版航点控制器启动，目标: [5.0, 0.0, -14.0]
+[simple_waypoint_controller_node-13] [INFO] [1752045227.023061411] [waypoint_controller]: 🎯 目标: [  5.   0. -14.] | 当前: [  0.          0.        -13.4186869] | 误差: [ 5.         0.        -0.5813131] | 距离: 5.034m
+[simple_waypoint_controller_node-13] [INFO] [1752045227.024059572] [waypoint_controller]: 🎮 发送命令: X=1.000, Y=0.000, Z=-0.291
+[simple_waypoint_controller_node-13] [INFO] [1752045227.223348100] [waypoint_controller]: 🎯 目标: [  5.   0. -14.] | 当前: [  0.          0.        -13.4687179] | 误差: [ 5.         0.        -0.5312821] | 距离: 5.028m
+[simple_waypoint_controller_node-13] [INFO] [1752045227.223951552] [waypoint_controller]: 🎮 发送命令: X=1.000, Y=0.000, Z=-0.266
+[simple_waypoint_controller_node-13] [INFO] [1752045227.225085774] [waypoint_controller]: 📊 状态：航点1/4, 目标[5.0, 0.0, -14.0], 当前位置[  0.          0.        -13.4687179]
+[simple_odom_publisher_node-7] [INFO] [1752045227.324083285] [simple_odom_publisher]: 📍 内置里程计 #281: 位置=(0.00, 0.00, -13.50), 速度=(0.00, 0.00, 0.00)
+[simple_waypoint_controller_node-13] [INFO] [1752045227.423528417] [waypoint_controller]: 🎯 目标: [  5.   0. -14.] | 当前: [  0.          0.        -13.5187489] | 误差: [ 5.         0.        -0.4812511] | 距离: 5.023m
+[simple_waypoint_controller_node-13] [INFO] [1752045227.424037257] [waypoint_controller]: 🎮 发送命令: X=1.000, Y=0.000, Z=-0.241
+[simple_waypoint_controller_node-13] [INFO] [1752045227.623080510] [waypoint_controller]: 🎯 目标: [  5.   0. -14.] | 当前: [  0.          0.        -13.5687799] | 误差: [ 5.         0.        -0.4312201] | 距离: 5.019m
+[simple_waypoint_controller_node-13] [INFO] [1752045227.623608279] [waypoint_controller]: 🎮 发送命令: X=1.000, Y=0.000, Z=-0.216
+[experience_map_node-12] [INFO] [1752045227.705749307] [experience_map_node]: 轨迹点数: 300
+[simple_odom_publisher_node-7] [INFO] [1752045227.725030460] [simple_odom_publisher]: 📍 内置里程计 #301: 位置=(0.05, 0.00, -13.60), 速度=(1.00, 0.00, 0.00)
+[simple_waypoint_controller_node-13] [INFO] [1752045227.823314643] [waypoint_controller]: 🎯 目标: [  5.   0. -14.] | 当前: [  0.13        0.        -13.6188109] | 误差: [ 4.87       0.        -0.3811891] | 距离: 4.885m
+[simple_waypoint_controller_node-13] [INFO] [1752045227.823838155] [waypoint_controller]: 🎮 发送命令: X=1.000, Y=0.000, Z=-0.191
+[place_cell_node-11] [INFO] [1752045227.870347330] [place_cell_node]: 🚶 路径积分更新#10: 位移=[ 0.02       0.        -0.0059841], 距离=0.021m, 神经元中心=[7.55338462 7.96267446 8.00645739], 世界中心=[  2.23203077  -0.02239533 -13.49612556]
+[simple_waypoint_controller_node-13] [INFO] [1752045228.024377167] [waypoint_controller]: 🎯 目标: [  5.   0. -14.] | 当前: [  0.33        0.        -13.6688419] | 误差: [ 4.67       0.        -0.3311581] | 距离: 4.682m
+[simple_waypoint_controller_node-13] [INFO] [1752045228.024959799] [waypoint_controller]: 🎮 发送命令: X=1.000, Y=0.000, Z=-0.166
+[place_cell_node-11] [INFO] [1752045228.068131652] [place_cell_node]: 🚶 路径积分更新#20: 位移=[ 0.02       0.        -0.0059841], 距离=0.021m, 神经元中心=[6.86618175 8.71563934 7.64017105], 世界中心=[  1.81970905   0.42938361 -13.71589737]
+[simple_odom_publisher_node-7] [INFO] [1752045228.125964675] [simple_odom_publisher]: 📍 内置里程计 #321: 位置=(0.45, 0.00, -13.70), 速度=(1.00, 0.00, 0.00)
+[image_processing_node-9] [INFO] [1752045228.223767915] [image_processing_node]: 📊 图像处理状态: 接收62帧, 处理20帧, 处理率32.3%
+[simple_odom_publisher_node-7] [INFO] [1752045228.224203990] [simple_odom_publisher]: 📊 数据源=内置里程计 ✅, 内置=325, 模型=0, 发布=325条到SLAM
+[simple_waypoint_controller_node-13] [INFO] [1752045228.225164249] [waypoint_controller]: 🎯 目标: [  5.   0. -14.] | 当前: [  0.53        0.        -13.7188729] | 误差: [ 4.47       0.        -0.2811271] | 距离: 4.479m
+[simple_waypoint_controller_node-13] [INFO] [1752045228.226065262] [waypoint_controller]: 🎮 发送命令: X=1.000, Y=0.000, Z=-0.141
+[simple_waypoint_controller_node-13] [INFO] [1752045228.227349614] [waypoint_controller]: 📊 状态：航点1/4, 目标[5.0, 0.0, -14.0], 当前位置[  0.53        0.        -13.7188729]
+[image_processing_node-9] [INFO] [1752045228.256224255] [image_processing_node]: 🔍 处理帧#21: 检测到15个特征点
+[place_cell_node-11] [INFO] [1752045228.266262307] [place_cell_node]: 🚶 路径积分更新#30: 位移=[ 0.02       0.        -0.0059841], 距离=0.021m, 神经元中心=[6.59570078 8.29276523 7.73868238], 世界中心=[  1.65742047   0.17565914 -13.65679057]
+[simple_waypoint_controller_node-13] [INFO] [1752045228.425067047] [waypoint_controller]: 🎯 目标: [  5.   0. -14.] | 当前: [  0.73        0.        -13.7689039] | 误差: [ 4.27       0.        -0.2310961] | 距离: 4.276m
+[simple_waypoint_controller_node-13] [INFO] [1752045228.425920019] [waypoint_controller]: 🎮 发送命令: X=1.000, Y=0.000, Z=-0.116
+[place_cell_node-11] [INFO] [1752045228.468691055] [place_cell_node]: 🚶 路径积分更新#40: 位移=[ 0.02       0.        -0.0059841], 距离=0.021m, 神经元中心=[6.74863635 7.60421998 7.80797664], 世界中心=[  1.74918181  -0.23746801 -13.61521402]
+[simple_odom_publisher_node-7] [INFO] [1752045228.525895315] [simple_odom_publisher]: 📍 内置里程计 #341: 位置=(0.85, 0.00, -13.80), 速度=(1.00, 0.00, 0.00)
+[simple_waypoint_controller_node-13] [INFO] [1752045228.624045645] [waypoint_controller]: 🎯 目标: [  5.   0. -14.] | 当前: [  0.93        0.        -13.8189349] | 误差: [ 4.07       0.        -0.1810651] | 距离: 4.074m
+[simple_waypoint_controller_node-13] [INFO] [1752045228.624597700] [waypoint_controller]: 🎮 发送命令: X=1.000, Y=0.000, Z=-0.091
+[place_cell_node-11] [INFO] [1752045228.670640100] [place_cell_node]: 🚶 路径积分更新#50: 位移=[ 0.02       0.        -0.0059841], 距离=0.021m, 神经元中心=[6.13315642 7.57435101 7.10214188], 世界中心=[  1.37989385  -0.2553894  -14.03871487]
+[simple_waypoint_controller_node-13] [INFO] [1752045228.824694387] [waypoint_controller]: 🎯 目标: [  5.   0. -14.] | 当前: [  1.13        0.        -13.8689659] | 误差: [ 3.87       0.        -0.1310341] | 距离: 3.872m
+[simple_waypoint_controller_node-13] [INFO] [1752045228.825260942] [waypoint_controller]: 🎮 发送命令: X=1.000, Y=0.000, Z=-0.066
+[place_cell_node-11] [INFO] [1752045228.866426746] [place_cell_node]: 🚶 路径积分更新#60: 位移=[ 0.02       0.        -0.0059841], 距离=0.021m, 神经元中心=[5.5389929  7.13564594 7.15679464], 世界中心=[  1.02339574  -0.51861244 -14.00592321]
+[simple_odom_publisher_node-7] [INFO] [1752045228.925781207] [simple_odom_publisher]: 📍 内置里程计 #361: 位置=(1.25, 0.00, -13.90), 速度=(1.00, 0.00, 0.00)
+[simple_waypoint_controller_node-13] [INFO] [1752045229.024234450] [waypoint_controller]: 🎯 目标: [  5.   0. -14.] | 当前: [  1.33        0.        -13.9189969] | 误差: [ 3.67       0.        -0.0810031] | 距离: 3.671m
+[simple_waypoint_controller_node-13] [INFO] [1752045229.024665743] [waypoint_controller]: 🎮 发送命令: X=1.000, Y=0.000, Z=-0.041
+[place_cell_node-11] [INFO] [1752045229.067634719] [place_cell_node]: 🚶 路径积分更新#70: 位移=[ 0.02       0.        -0.0059841], 距离=0.021m, 神经元中心=[5.11777389 6.5459949  7.34154736], 世界中心=[  0.77066433  -0.87240306 -13.89507158]
+[simple_waypoint_controller_node-13] [INFO] [1752045229.224226422] [waypoint_controller]: 🎯 目标: [  5.   0. -14.] | 当前: [  1.53        0.        -13.9690279] | 误差: [ 3.47       0.        -0.0309721] | 距离: 3.470m
+[simple_waypoint_controller_node-13] [INFO] [1752045229.224813686] [waypoint_controller]: 🎮 发送命令: X=1.000, Y=0.000, Z=-0.015
+[simple_waypoint_controller_node-13] [INFO] [1752045229.225601830] [waypoint_controller]: 📊 状态：航点1/4, 目标[5.0, 0.0, -14.0], 当前位置[  1.53        0.        -13.9690279]
+[place_cell_node-11] [INFO] [1752045229.267303278] [place_cell_node]: 🚶 路径积分更新#80: 位移=[ 0.02       0.        -0.0059841], 距离=0.021m, 神经元中心=[4.40052864 6.74237638 6.99711197], 世界中心=[  0.34031718  -0.75457417 -14.10173282]
+[simple_odom_publisher_node-7] [INFO] [1752045229.325942491] [simple_odom_publisher]: 📍 内置里程计 #381: 位置=(1.65, 0.00, -14.00), 速度=(1.00, 0.00, 0.00)
+[simple_waypoint_controller_node-13] [INFO] [1752045229.423775114] [waypoint_controller]: 🎯 目标: [  5.   0. -14.] | 当前: [  1.73        0.        -14.0190589] | 误差: [3.27      0.        0.0190589] | 距离: 3.270m
+[simple_waypoint_controller_node-13] [INFO] [1752045229.424081855] [waypoint_controller]: 🎮 发送命令: X=1.000, Y=0.000, Z=0.010
+[place_cell_node-11] [INFO] [1752045229.467583645] [place_cell_node]: 🚶 路径积分更新#90: 位移=[ 0.02       0.        -0.0059841], 距离=0.021m, 神经元中心=[4.61434706 6.5773282  6.64848649], 世界中心=[  0.46860824  -0.85360308 -14.31090811]
+[simple_waypoint_controller_node-13] [INFO] [1752045229.625105894] [waypoint_controller]: 🎯 目标: [  5.   0. -14.] | 当前: [  1.93        0.        -14.0690899] | 误差: [3.07      0.        0.0690899] | 距离: 3.071m
+[simple_waypoint_controller_node-13] [INFO] [1752045229.625697749] [waypoint_controller]: 🎮 发送命令: X=1.000, Y=0.000, Z=0.035
+[place_cell_node-11] [INFO] [1752045229.668099649] [place_cell_node]: 🚶 路径积分更新#100: 位移=[ 0.02       0.        -0.0059841], 距离=0.021m, 神经元中心=[4.44335263 6.07510225 6.41605966], 世界中心=[  0.36601158  -1.15493865 -14.45036421]
+[experience_map_node-12] [INFO] [1752045229.706493763] [experience_map_node]: 轨迹点数: 400
+[simple_odom_publisher_node-7] [INFO] [1752045229.726379301] [simple_odom_publisher]: 📍 内置里程计 #401: 位置=(2.05, 0.00, -14.10), 速度=(1.00, 0.00, 0.00)
+[simple_waypoint_controller_node-13] [INFO] [1752045229.824642390] [waypoint_controller]: 🎯 目标: [  5.   0. -14.] | 当前: [  2.13        0.        -14.1191209] | 误差: [2.87      0.        0.1191209] | 距离: 2.872m
+[simple_waypoint_controller_node-13] [INFO] [1752045229.824942886] [waypoint_controller]: 🎮 发送命令: X=1.000, Y=0.000, Z=0.060
+[place_cell_node-11] [INFO] [1752045229.870543482] [place_cell_node]: 🚶 路径积分更新#110: 位移=[ 0.02       0.        -0.0059841], 距离=0.021m, 神经元中心=[4.35155635 5.90006881 5.86014027], 世界中心=[  0.31093381  -1.25995872 -14.78391584]
+[simple_waypoint_controller_node-13] [INFO] [1752045230.025110014] [waypoint_controller]: 🎯 目标: [  5.   0. -14.] | 当前: [  2.33        0.        -14.1691519] | 误差: [2.67      0.        0.1691519] | 距离: 2.675m
+[simple_waypoint_controller_node-13] [INFO] [1752045230.025581446] [waypoint_controller]: 🎮 发送命令: X=1.000, Y=0.000, Z=0.085
+[place_cell_node-11] [INFO] [1752045230.067968667] [place_cell_node]: 🚶 路径积分更新#120: 位移=[ 0.02       0.        -0.0059841], 距离=0.021m, 神经元中心=[4.01985569 6.02629925 5.26884185], 世界中心=[  0.11191341  -1.18422045 -15.13869489]
+[simple_odom_publisher_node-7] [INFO] [1752045230.127500023] [simple_odom_publisher]: 📍 内置里程计 #421: 位置=(2.45, 0.00, -14.20), 速度=(1.00, 0.00, 0.00)
+[simple_waypoint_controller_node-13] [INFO] [1752045230.225962338] [waypoint_controller]: 🎯 目标: [  5.   0. -14.] | 当前: [  2.53        0.        -14.2191829] | 误差: [2.47      0.        0.2191829] | 距离: 2.480m
+[simple_waypoint_controller_node-13] [INFO] [1752045230.226849850] [waypoint_controller]: 🎮 发送命令: X=1.000, Y=0.000, Z=0.110
+[simple_waypoint_controller_node-13] [INFO] [1752045230.227905086] [waypoint_controller]: 📊 状态：航点1/4, 目标[5.0, 0.0, -14.0], 当前位置[  2.53        0.        -14.2191829]
+[place_cell_node-11] [INFO] [1752045230.271583141] [place_cell_node]: 🚶 路径积分更新#130: 位移=[ 0.02       0.        -0.0059841], 距离=0.021m, 神经元中心=[3.65192316 6.69872316 5.24006493], 世界中心=[ -0.10884611  -0.78076611 -15.15596104]
+[simple_waypoint_controller_node-13] [INFO] [1752045230.426043566] [waypoint_controller]: 🎯 目标: [  5.   0. -14.] | 当前: [  2.73        0.        -14.2692139] | 误差: [2.27      0.        0.2692139] | 距离: 2.286m
+[simple_waypoint_controller_node-13] [INFO] [1752045230.426621355] [waypoint_controller]: 🎮 发送命令: X=1.000, Y=0.000, Z=0.135
+[place_cell_node-11] [INFO] [1752045230.471006649] [place_cell_node]: 🚶 路径积分更新#140: 位移=[ 0.02       0.        -0.0059841], 距离=0.021m, 神经元中心=[3.40880336 7.35217888 4.91563315], 世界中心=[ -0.25471799  -0.38869267 -15.35062011]
+[simple_odom_publisher_node-7] [INFO] [1752045230.528375857] [simple_odom_publisher]: 📍 内置里程计 #441: 位置=(2.85, 0.00, -14.30), 速度=(1.00, 0.00, 0.00)
+[simple_waypoint_controller_node-13] [INFO] [1752045230.626567980] [waypoint_controller]: 🎯 目标: [  5.   0. -14.] | 当前: [  2.93        0.        -14.3192449] | 误差: [2.07      0.        0.3192449] | 距离: 2.094m
+[simple_waypoint_controller_node-13] [INFO] [1752045230.627091865] [waypoint_controller]: 🎮 发送命令: X=1.000, Y=0.000, Z=0.160
+[place_cell_node-11] [INFO] [1752045230.669052256] [place_cell_node]: 🚶 路径积分更新#150: 位移=[ 0.02       0.        -0.0059841], 距离=0.021m, 神经元中心=[3.45989528 7.38461378 4.29592968], 世界中心=[ -0.22406283  -0.36923173 -15.72244219]
+[simple_waypoint_controller_node-13] [INFO] [1752045230.827069601] [waypoint_controller]: 🎯 目标: [  5.   0. -14.] | 当前: [  3.13        0.        -14.3692759] | 误差: [1.87      0.        0.3692759] | 距离: 1.906m
+[simple_waypoint_controller_node-13] [INFO] [1752045230.827866741] [waypoint_controller]: 🎮 发送命令: X=0.935, Y=0.000, Z=0.185
+[place_cell_node-11] [INFO] [1752045230.869672186] [place_cell_node]: 🚶 路径积分更新#160: 位移=[ 0.02       0.        -0.0059841], 距离=0.021m, 神经元中心=[3.21287968 7.38433387 3.82280307], 世界中心=[ -0.37227219  -0.36939968 -16.00631816]
+[simple_odom_publisher_node-7] [INFO] [1752045230.928072060] [simple_odom_publisher]: 📍 内置里程计 #461: 位置=(3.25, 0.00, -14.40), 速度=(0.94, 0.00, 0.00)
+[simple_waypoint_controller_node-13] [INFO] [1752045231.025403630] [waypoint_controller]: 🎯 目标: [  5.   0. -14.] | 当前: [  3.32155     0.        -14.4193069] | 误差: [1.67845   0.        0.4193069] | 距离: 1.730m
+[simple_waypoint_controller_node-13] [INFO] [1752045231.025695608] [waypoint_controller]: 🎮 发送命令: X=0.839, Y=0.000, Z=0.210
+[place_cell_node-11] [INFO] [1752045231.071203196] [place_cell_node]: 🚶 路径积分更新#170: 位移=[ 0.0167845  0.        -0.0059841], 距离=0.018m, 神经元中心=[2.70824185 7.314924   3.78343331], 世界中心=[ -0.67505489  -0.4110456  -16.02994002]
+[simple_waypoint_controller_node-13] [INFO] [1752045231.226577715] [waypoint_controller]: 🎯 目标: [  5.   0. -14.] | 当前: [  3.4913105   0.        -14.4693379] | 误差: [1.5086895 0.        0.4693379] | 距离: 1.580m
+[simple_waypoint_controller_node-13] [INFO] [1752045231.227505801] [waypoint_controller]: 🎮 发送命令: X=0.754, Y=0.000, Z=0.235
+[simple_waypoint_controller_node-13] [INFO] [1752045231.228814348] [waypoint_controller]: 📊 状态：航点1/4, 目标[5.0, 0.0, -14.0], 当前位置[  3.4913105   0.        -14.4693379]
+[image_processing_node-9] [INFO] [1752045231.258992623] [image_processing_node]: 🔍 处理帧#31: 检测到10个特征点
+[place_cell_node-11] [INFO] [1752045231.270585962] [place_cell_node]: 🚶 路径积分更新#180: 位移=[ 0.0167845  0.        -0.0059841], 距离=0.018m, 神经元中心=[2.41827217 7.26836349 3.78719261], 世界中心=[ -0.8490367   -0.43898191 -16.02768443]
+[simple_odom_publisher_node-7] [INFO] [1752045231.329280917] [simple_odom_publisher]: 📍 内置里程计 #481: 位置=(3.59, 0.00, -14.50), 速度=(0.75, 0.00, 0.00)
+[simple_waypoint_controller_node-13] [INFO] [1752045231.428224046] [waypoint_controller]: 🎯 目标: [  5.   0. -14.] | 当前: [  3.64812107   0.         -14.5193689 ] | 误差: [1.35187893 0.         0.5193689 ] | 距离: 1.448m
+[simple_waypoint_controller_node-13] [INFO] [1752045231.429170530] [waypoint_controller]: 🎮 发送命令: X=0.676, Y=0.000, Z=0.260
+[place_cell_node-11] [INFO] [1752045231.471797989] [place_cell_node]: 🚶 路径积分更新#190: 位移=[ 0.0150869  0.        -0.0059841], 距离=0.016m, 神经元中心=[2.34681703 7.23584508 3.75762051], 世界中心=[ -0.89190978  -0.45849295 -16.0454277 ]
+[simple_waypoint_controller_node-13] [INFO] [1752045231.626704014] [waypoint_controller]: 🎯 目标: [  5.   0. -14.] | 当前: [  3.78879733   0.         -14.5693999 ] | 误差: [1.21120267 0.         0.5693999 ] | 距离: 1.338m
+[simple_waypoint_controller_node-13] [INFO] [1752045231.627019784] [waypoint_controller]: 🎮 发送命令: X=0.606, Y=0.000, Z=0.285
+[place_cell_node-11] [INFO] [1752045231.628272308] [place_cell_node]: 🧠 网络更新#200: 峰值=8.0000, 均值=0.5884±1.7106, 活跃=907/4096(22.1%)✅, 神经元中心=(2.2,7.5,4.2), 对应世界=(-1.0,-0.3,-15.8), 位置更新=197次, 总移动距离=3.93m, 视觉更新=12次
+[place_cell_node-11] [INFO] [1752045231.628648117] [place_cell_node]: 📍 位置调试: 最新位置=(3.79, 0.00, -14.57), 平均移动距离=0.020m
+[place_cell_node-11] [INFO] [1752045231.673526780] [place_cell_node]: 🚶 路径积分更新#200: 位移=[ 0.01211203  0.         -0.0059841 ], 距离=0.014m, 神经元中心=[2.35632586 7.4731969  4.22669316], 世界中心=[ -0.88620448  -0.31608186 -15.76398411]
+[experience_map_node-12] [INFO] [1752045231.709230383] [experience_map_node]: 轨迹点数: 500
+[simple_odom_publisher_node-7] [INFO] [1752045231.728487340] [simple_odom_publisher]: 📍 内置里程计 #501: 位置=(3.86, 0.00, -14.60), 速度=(0.61, 0.00, 0.00)
+[simple_waypoint_controller_node-13] [INFO] [1752045231.827112627] [waypoint_controller]: 🎯 目标: [  5.   0. -14.] | 当前: [  3.91132436   0.         -14.6194309 ] | 误差: [1.08867564 0.         0.6194309 ] | 距离: 1.253m
+[simple_waypoint_controller_node-13] [INFO] [1752045231.827676059] [waypoint_controller]: 🎮 发送命令: X=0.544, Y=0.000, Z=0.310
+[place_cell_node-11] [INFO] [1752045231.870159746] [place_cell_node]: 🚶 路径积分更新#210: 位移=[ 0.01211203  0.         -0.0059841 ], 距离=0.014m, 神经元中心=[2.52566608 6.92404001 3.81337178], 世界中心=[ -0.78460035  -0.64557599 -16.01197693]
+[simple_waypoint_controller_node-13] [INFO] [1752045232.028722276] [waypoint_controller]: 🎯 目标: [  5.   0. -14.] | 当前: [  4.02448037   0.         -14.6694619 ] | 误差: [0.97551963 0.         0.6694619 ] | 距离: 1.183m
+[simple_waypoint_controller_node-13] [INFO] [1752045232.029659375] [waypoint_controller]: 🎮 发送命令: X=0.488, Y=0.000, Z=0.335
+[place_cell_node-11] [INFO] [1752045232.074068508] [place_cell_node]: 🚶 路径积分更新#220: 位移=[ 0.01088676  0.         -0.0059841 ], 距离=0.012m, 神经元中心=[2.34588265 6.16581163 3.63454761], 世界中心=[ -0.89247041  -1.10051302 -16.11927143]
+[simple_odom_publisher_node-7] [INFO] [1752045232.130174570] [simple_odom_publisher]: 📍 内置里程计 #521: 位置=(4.09, 0.00, -14.70), 速度=(0.49, 0.00, 0.00)
+[simple_waypoint_controller_node-13] [INFO] [1752045232.229017463] [waypoint_controller]: 🎯 目标: [  5.   0. -14.] | 当前: [  4.12599279   0.         -14.7194929 ] | 误差: [0.87400721 0.         0.7194929 ] | 距离: 1.132m
+[simple_waypoint_controller_node-13] [INFO] [1752045232.229840405] [waypoint_controller]: 🎮 发送命令: X=0.437, Y=0.000, Z=0.360
+[simple_waypoint_controller_node-13] [INFO] [1752045232.231058113] [waypoint_controller]: 📊 状态：航点1/4, 目标[5.0, 0.0, -14.0], 当前位置[  4.12599279   0.         -14.7194929 ]
+[place_cell_node-11] [INFO] [1752045232.333001558] [place_cell_node]: 🚶 路径积分更新#230: 位移=[ 0.00874007  0.         -0.0079461 ], 距离=0.012m, 神经元中心=[2.12513879 5.43805225 3.79070503], 世界中心=[ -1.02491673  -1.53716865 -16.02557698]
+[simple_waypoint_controller_node-13] [INFO] [1752045232.428102622] [waypoint_controller]: 🎯 目标: [  5.   0. -14.] | 当前: [  4.21694645   0.         -14.7695239 ] | 误差: [0.78305355 0.         0.7695239 ] | 距离: 1.098m
+[simple_waypoint_controller_node-13] [INFO] [1752045232.428629106] [waypoint_controller]: 🎮 发送命令: X=0.392, Y=0.000, Z=0.385
+[simple_odom_publisher_node-7] [INFO] [1752045232.530367755] [simple_odom_publisher]: 📍 内置里程计 #541: 位置=(4.27, 0.00, -14.80), 速度=(0.39, 0.00, 0.00)
+[simple_waypoint_controller_node-13] [INFO] [1752045232.628113090] [waypoint_controller]: 🎯 目标: [  5.   0. -14.] | 当前: [  4.29843518   0.         -14.8195549 ] | 误差: [0.70156482 0.         0.8195549 ] | 距离: 1.079m
+[simple_waypoint_controller_node-13] [INFO] [1752045232.628756532] [waypoint_controller]: 🎮 发送命令: X=0.351, Y=0.000, Z=0.410
+[simple_waypoint_controller_node-13] [INFO] [1752045232.828925075] [waypoint_controller]: 🎯 目标: [  5.   0. -14.] | 当前: [  4.37144377   0.         -14.8695859 ] | 误差: [0.62855623 0.         0.8695859 ] | 距离: 1.073m
+[simple_waypoint_controller_node-13] [INFO] [1752045232.829525880] [waypoint_controller]: 🎮 发送命令: X=0.314, Y=0.000, Z=0.435
+[simple_odom_publisher_node-7] [INFO] [1752045232.930960952] [simple_odom_publisher]: 📍 内置里程计 #561: 位置=(4.41, 0.00, -14.90), 速度=(0.31, 0.00, 0.00)
+[simple_waypoint_controller_node-13] [INFO] [1752045233.028779975] [waypoint_controller]: 🎯 目标: [  5.   0. -14.] | 当前: [  4.43685469   0.         -14.9196169 ] | 误差: [0.56314531 0.         0.9196169 ] | 距离: 1.078m
+[simple_waypoint_controller_node-13] [INFO] [1752045233.029287735] [waypoint_controller]: 🎮 发送命令: X=0.282, Y=0.000, Z=0.460
+[place_cell_node-11] [INFO] [1752045233.034662986] [place_cell_node]: 🚶 路径积分更新#240: 位移=[ 0.00628556  0.         -0.0079461 ], 距离=0.010m, 神经元中心=[1.59732244 4.20406832 4.96481758], 世界中心=[ -1.34160653  -2.27755901 -15.32110945]
+[image_processing_node-9] [INFO] [1752045233.228797833] [image_processing_node]: 📊 图像处理状态: 接收112帧, 处理37帧, 处理率33.0%
+[simple_odom_publisher_node-7] [INFO] [1752045233.228863946] [simple_odom_publisher]: 📊 数据源=内置里程计 ✅, 内置=575, 模型=0, 发布=575条到SLAM
+[simple_waypoint_controller_node-13] [INFO] [1752045233.229839425] [waypoint_controller]: 🎯 目标: [  5.   0. -14.] | 当前: [  4.49545861   0.         -14.9696479 ] | 误差: [0.50454139 0.         0.9696479 ] | 距离: 1.093m
+[simple_waypoint_controller_node-13] [INFO] [1752045233.230367959] [waypoint_controller]: 🎮 发送命令: X=0.252, Y=0.000, Z=0.485
+[simple_waypoint_controller_node-13] [INFO] [1752045233.231272008] [waypoint_controller]: 📊 状态：航点1/4, 目标[5.0, 0.0, -14.0], 当前位置[  4.49545861   0.         -14.9696479 ]
+[simple_odom_publisher_node-7] [INFO] [1752045233.330971228] [simple_odom_publisher]: 📍 内置里程计 #581: 位置=(4.53, 0.00, -15.00), 速度=(0.25, 0.00, 0.00)
+[simple_waypoint_controller_node-13] [INFO] [1752045233.428954751] [waypoint_controller]: 🎯 目标: [  5.   0. -14.] | 当前: [  4.54796388   0.         -15.0196789 ] | 误差: [0.45203612 0.         1.0196789 ] | 距离: 1.115m
+[simple_waypoint_controller_node-13] [INFO] [1752045233.429427119] [waypoint_controller]: 🎮 发送命令: X=0.226, Y=0.000, Z=0.510
+[simple_waypoint_controller_node-13] [INFO] [1752045233.630254596] [waypoint_controller]: 🎯 目标: [  5.   0. -14.] | 当前: [  4.59500518   0.         -15.0697099 ] | 误差: [0.40499482 0.         1.0697099 ] | 距离: 1.144m
+[simple_waypoint_controller_node-13] [INFO] [1752045233.631071445] [waypoint_controller]: 🎮 发送命令: X=0.202, Y=0.000, Z=0.535
+[experience_map_node-12] [INFO] [1752045233.712136426] [experience_map_node]: 轨迹点数: 600
+[simple_odom_publisher_node-7] [INFO] [1752045233.731604550] [simple_odom_publisher]: 📍 内置里程计 #601: 位置=(4.62, 0.00, -15.10), 速度=(0.20, 0.00, 0.00)
+[simple_waypoint_controller_node-13] [INFO] [1752045233.829837619] [waypoint_controller]: 🎯 目标: [  5.   0. -14.] | 当前: [  4.63715111   0.         -15.1197409 ] | 误差: [0.36284889 0.         1.1197409 ] | 距离: 1.177m
+[simple_waypoint_controller_node-13] [INFO] [1752045233.830422503] [waypoint_controller]: 🎮 发送命令: X=0.181, Y=0.000, Z=0.560
+[simple_waypoint_controller_node-13] [INFO] [1752045234.030592838] [waypoint_controller]: 🎯 目标: [  5.   0. -14.] | 当前: [  4.6749111   0.        -15.1697719] | 误差: [0.3250889 0.        1.1697719] | 距离: 1.214m
+[simple_waypoint_controller_node-13] [INFO] [1752045234.031387641] [waypoint_controller]: 🎮 发送命令: X=0.163, Y=0.000, Z=0.585
+[simple_odom_publisher_node-7] [INFO] [1752045234.131111055] [simple_odom_publisher]: 📍 内置里程计 #621: 位置=(4.70, 0.00, -15.20), 速度=(0.16, 0.00, 0.00)
+[simple_waypoint_controller_node-13] [INFO] [1752045234.230200590] [waypoint_controller]: 🎯 目标: [  5.   0. -14.] | 当前: [  4.70874159   0.         -15.2198029 ] | 误差: [0.29125841 0.         1.2198029 ] | 距离: 1.254m
+[simple_waypoint_controller_node-13] [INFO] [1752045234.230695309] [waypoint_controller]: 🎮 发送命令: X=0.146, Y=0.000, Z=0.610
+[simple_waypoint_controller_node-13] [INFO] [1752045234.231468662] [waypoint_controller]: 📊 状态：航点1/4, 目标[5.0, 0.0, -14.0], 当前位置[  4.70874159   0.         -15.2198029 ]
+[image_processing_node-9] [INFO] [1752045234.258009222] [image_processing_node]: 🔍 处理帧#41: 检测到8个特征点
+[simple_waypoint_controller_node-13] [INFO] [1752045234.430899757] [waypoint_controller]: 🎯 目标: [  5.   0. -14.] | 当前: [  4.7390515   0.        -15.2698339] | 误差: [0.2609485 0.        1.2698339] | 距离: 1.296m
+[simple_waypoint_controller_node-13] [INFO] [1752045234.431699885] [waypoint_controller]: 🎮 发送命令: X=0.130, Y=0.000, Z=0.635
+[simple_odom_publisher_node-7] [INFO] [1752045234.531825213] [simple_odom_publisher]: 📍 内置里程计 #641: 位置=(4.76, 0.00, -15.30), 速度=(0.13, 0.00, 0.00)
+[simple_waypoint_controller_node-13] [INFO] [1752045234.630777904] [waypoint_controller]: 🎯 目标: [  5.   0. -14.] | 当前: [  4.7662072   0.        -15.3198649] | 误差: [0.2337928 0.        1.3198649] | 距离: 1.340m
+[simple_waypoint_controller_node-13] [INFO] [1752045234.631477736] [waypoint_controller]: 🎮 发送命令: X=0.117, Y=0.000, Z=0.660
+[simple_waypoint_controller_node-13] [INFO] [1752045234.830911296] [waypoint_controller]: 🎯 目标: [  5.   0. -14.] | 当前: [  4.79053693   0.         -15.3698959 ] | 误差: [0.20946307 0.         1.3698959 ] | 距离: 1.386m
+[simple_waypoint_controller_node-13] [INFO] [1752045234.831509800] [waypoint_controller]: 🎮 发送命令: X=0.105, Y=0.000, Z=0.685
+[simple_odom_publisher_node-7] [INFO] [1752045234.932484083] [simple_odom_publisher]: 📍 内置里程计 #661: 位置=(4.80, 0.00, -15.40), 速度=(0.10, 0.00, 0.00)
+[simple_waypoint_controller_node-13] [INFO] [1752045235.031827774] [waypoint_controller]: 🎯 目标: [  5.   0. -14.] | 当前: [  4.81233477   0.         -15.4199269 ] | 误差: [0.18766523 0.         1.4199269 ] | 距离: 1.432m
+[simple_waypoint_controller_node-13] [INFO] [1752045235.032644123] [waypoint_controller]: 🎮 发送命令: X=0.094, Y=0.000, Z=0.710
+[simple_waypoint_controller_node-13] [INFO] [1752045235.231173190] [waypoint_controller]: 🎯 目标: [  5.   0. -14.] | 当前: [  4.83186422   0.         -15.4699579 ] | 误差: [0.16813578 0.         1.4699579 ] | 距离: 1.480m
+[simple_waypoint_controller_node-13] [INFO] [1752045235.231710784] [waypoint_controller]: 🎮 发送命令: X=0.084, Y=0.000, Z=0.735
+[simple_waypoint_controller_node-13] [INFO] [1752045235.232498719] [waypoint_controller]: 📊 状态：航点1/4, 目标[5.0, 0.0, -14.0], 当前位置[  4.83186422   0.         -15.4699579 ]
+[simple_odom_publisher_node-7] [INFO] [1752045235.333732690] [simple_odom_publisher]: 📍 内置里程计 #681: 位置=(4.84, 0.00, -15.50), 速度=(0.08, 0.00, 0.00)
+[simple_waypoint_controller_node-13] [INFO] [1752045235.431475515] [waypoint_controller]: 🎯 目标: [  5.   0. -14.] | 当前: [  4.84936133   0.         -15.5199889 ] | 误差: [0.15063867 0.         1.5199889 ] | 距离: 1.527m
+[simple_waypoint_controller_node-13] [INFO] [1752045235.432038423] [waypoint_controller]: 🎮 发送命令: X=0.075, Y=0.000, Z=0.760
+[simple_waypoint_controller_node-13] [INFO] [1752045235.631310659] [waypoint_controller]: 🎯 目标: [  5.   0. -14.] | 当前: [  4.8650376   0.        -15.5700199] | 误差: [0.1349624 0.        1.5700199] | 距离: 1.576m
+[simple_waypoint_controller_node-13] [INFO] [1752045235.632067918] [waypoint_controller]: 🎮 发送命令: X=0.067, Y=0.000, Z=0.785
+[experience_map_node-12] [INFO] [1752045235.714192661] [experience_map_node]: 轨迹点数: 700
+[simple_odom_publisher_node-7] [INFO] [1752045235.733180267] [simple_odom_publisher]: 📍 内置里程计 #701: 位置=(4.87, 0.00, -15.60), 速度=(0.07, 0.00, 0.00)
+[simple_waypoint_controller_node-13] [INFO] [1752045235.832894397] [waypoint_controller]: 🎯 目标: [  5.   0. -14.] | 当前: [  4.87908251   0.         -15.6200509 ] | 误差: [0.12091749 0.         1.6200509 ] | 距离: 1.625m
+[simple_waypoint_controller_node-13] [INFO] [1752045235.833869332] [waypoint_controller]: 🎮 发送命令: X=0.060, Y=0.000, Z=0.810
+[simple_waypoint_controller_node-13] [INFO] [1752045236.032285553] [waypoint_controller]: 🎯 目标: [  5.   0. -14.] | 当前: [  4.89166583   0.         -15.6700819 ] | 误差: [0.10833417 0.         1.6700819 ] | 距离: 1.674m
+[simple_waypoint_controller_node-13] [INFO] [1752045236.032816466] [waypoint_controller]: 🎮 发送命令: X=0.054, Y=0.000, Z=0.835
+[simple_odom_publisher_node-7] [INFO] [1752045236.133734000] [simple_odom_publisher]: 📍 内置里程计 #721: 位置=(4.90, 0.00, -15.70), 速度=(0.05, 0.00, 0.00)
+[simple_waypoint_controller_node-13] [INFO] [1752045236.232412943] [waypoint_controller]: 🎯 目标: [  5.   0. -14.] | 当前: [  4.90293966   0.         -15.7201129 ] | 误差: [0.09706034 0.         1.7201129 ] | 距离: 1.723m
+[simple_waypoint_controller_node-13] [INFO] [1752045236.233564135] [waypoint_controller]: 🎮 发送命令: X=0.049, Y=0.000, Z=0.860
+[simple_waypoint_controller_node-13] [INFO] [1752045236.234895036] [waypoint_controller]: 📊 状态：航点1/4, 目标[5.0, 0.0, -14.0], 当前位置[  4.90293966   0.         -15.7201129 ]
+[simple_waypoint_controller_node-13] [INFO] [1752045236.432787558] [waypoint_controller]: 🎯 目标: [  5.   0. -14.] | 当前: [  4.91304028   0.         -15.7701439 ] | 误差: [0.08695972 0.         1.7701439 ] | 距离: 1.772m
+[simple_waypoint_controller_node-13] [INFO] [1752045236.433327481] [waypoint_controller]: 🎮 发送命令: X=0.043, Y=0.000, Z=0.885
+[simple_odom_publisher_node-7] [INFO] [1752045236.535175440] [simple_odom_publisher]: 📍 内置里程计 #741: 位置=(4.92, 0.00, -15.80), 速度=(0.04, 0.00, 0.00)
+[simple_waypoint_controller_node-13] [INFO] [1752045236.633496383] [waypoint_controller]: 🎯 目标: [  5.   0. -14.] | 当前: [  4.92208977   0.         -15.8201749 ] | 误差: [0.07791023 0.         1.8201749 ] | 距离: 1.822m
+[simple_waypoint_controller_node-13] [INFO] [1752045236.634171925] [waypoint_controller]: 🎮 发送命令: X=0.039, Y=0.000, Z=0.910
+[place_cell_node-11] [INFO] [1752045236.637874777] [place_cell_node]: 🧠 网络更新#300: 峰值=8.0000, 均值=0.1383±0.6630, 活跃=525/4096(12.8%)✅, 神经元中心=(1.3,3.4,5.0), 对应世界=(-1.5,-2.8,-15.3), 位置更新=240次, 总移动距离=4.45m, 视觉更新=18次
+[place_cell_node-11] [INFO] [1752045236.638869832] [place_cell_node]: 📍 位置调试: 最新位置=(4.92, 0.00, -15.82), 平均移动距离=0.019m
+[simple_waypoint_controller_node-13] [INFO] [1752045236.833720755] [waypoint_controller]: 🎯 目标: [  5.   0. -14.] | 当前: [  4.93019753   0.         -15.8702059 ] | 误差: [0.06980247 0.         1.8702059 ] | 距离: 1.872m
+[simple_waypoint_controller_node-13] [INFO] [1752045236.834553050] [waypoint_controller]: 🎮 发送命令: X=0.035, Y=0.000, Z=0.935
+[simple_odom_publisher_node-7] [INFO] [1752045236.934940843] [simple_odom_publisher]: 📍 内置里程计 #761: 位置=(4.93, 0.00, -15.90), 速度=(0.03, 0.00, 0.00)
+[simple_waypoint_controller_node-13] [INFO] [1752045237.034399427] [waypoint_controller]: 🎯 目标: [  5.   0. -14.] | 当前: [  4.93746155   0.         -15.9202369 ] | 误差: [0.06253845 0.         1.9202369 ] | 距离: 1.921m
+[simple_waypoint_controller_node-13] [INFO] [1752045237.035237165] [waypoint_controller]: 🎮 发送命令: X=0.031, Y=0.000, Z=0.960
+[simple_waypoint_controller_node-13] [INFO] [1752045237.234546064] [waypoint_controller]: 🎯 目标: [  5.   0. -14.] | 当前: [  4.94396963   0.         -15.9702679 ] | 误差: [0.05603037 0.         1.9702679 ] | 距离: 1.971m
+[simple_waypoint_controller_node-13] [INFO] [1752045237.235241951] [waypoint_controller]: 🎮 发送命令: X=0.028, Y=0.000, Z=0.985
+[simple_waypoint_controller_node-13] [INFO] [1752045237.236253529] [waypoint_controller]: 📊 状态：航点1/4, 目标[5.0, 0.0, -14.0], 当前位置[  4.94396963   0.         -15.9702679 ]
+[image_processing_node-9] [INFO] [1752045237.262342378] [image_processing_node]: 🔍 处理帧#51: 检测到11个特征点
+[simple_odom_publisher_node-7] [INFO] [1752045237.335075312] [simple_odom_publisher]: 📍 内置里程计 #781: 位置=(4.95, 0.00, -16.00), 速度=(0.03, 0.00, 0.00)
+[simple_waypoint_controller_node-13] [INFO] [1752045237.434855133] [waypoint_controller]: 🎯 目标: [  5.   0. -14.] | 当前: [  4.94980045   0.         -16.0202989 ] | 误差: [0.05019955 0.         2.0202989 ] | 距离: 2.021m
+[simple_waypoint_controller_node-13] [INFO] [1752045237.435647308] [waypoint_controller]: 🎮 发送命令: X=0.025, Y=0.000, Z=1.000
+[simple_waypoint_controller_node-13] [INFO] [1752045237.633735402] [waypoint_controller]: 🎯 目标: [  5.   0. -14.] | 当前: [  4.95502449   0.         -16.0703299 ] | 误差: [0.04497551 0.         2.0703299 ] | 距离: 2.071m
+[simple_waypoint_controller_node-13] [INFO] [1752045237.634457793] [waypoint_controller]: 🎮 发送命令: X=0.022, Y=0.000, Z=1.000
+[experience_map_node-12] [INFO] [1752045237.715988622] [experience_map_node]: 轨迹点数: 800
+[simple_odom_publisher_node-7] [INFO] [1752045237.735990610] [simple_odom_publisher]: 📍 内置里程计 #801: 位置=(4.96, 0.00, -16.10), 速度=(0.02, 0.00, 0.00)
+[simple_waypoint_controller_node-13] [INFO] [1752045237.834921895] [waypoint_controller]: 🎯 目标: [  5.   0. -14.] | 当前: [  4.95970488   0.         -16.1203609 ] | 误差: [0.04029512 0.         2.1203609 ] | 距离: 2.121m
+[simple_waypoint_controller_node-13] [INFO] [1752045237.835562547] [waypoint_controller]: 🎮 发送命令: X=0.020, Y=0.000, Z=1.000
+[simple_waypoint_controller_node-13] [INFO] [1752045238.034360719] [waypoint_controller]: 🎯 目标: [  5.   0. -14.] | 当前: [  4.9638982   0.        -16.1703919] | 误差: [0.0361018 0.        2.1703919] | 距离: 2.171m
+[simple_waypoint_controller_node-13] [INFO] [1752045238.034884196] [waypoint_controller]: 🎮 发送命令: X=0.018, Y=0.000, Z=1.000
+[simple_odom_publisher_node-7] [INFO] [1752045238.136179371] [simple_odom_publisher]: 📍 内置里程计 #821: 位置=(4.97, 0.00, -16.20), 速度=(0.02, 0.00, 0.00)
+[image_processing_node-9] [INFO] [1752045238.234379103] [image_processing_node]: 📊 图像处理状态: 接收162帧, 处理54帧, 处理率33.3%
+[simple_odom_publisher_node-7] [INFO] [1752045238.234975586] [simple_odom_publisher]: 📊 数据源=内置里程计 ✅, 内置=825, 模型=0, 发布=825条到SLAM
+[simple_waypoint_controller_node-13] [INFO] [1752045238.235220382] [waypoint_controller]: 🎯 目标: [  5.   0. -14.] | 当前: [  4.96765515   0.         -16.2204229 ] | 误差: [0.03234485 0.         2.2204229 ] | 距离: 2.221m
+[simple_waypoint_controller_node-13] [INFO] [1752045238.235978116] [waypoint_controller]: 🎮 发送命令: X=0.016, Y=0.000, Z=1.000
+[simple_waypoint_controller_node-13] [INFO] [1752045238.237217660] [waypoint_controller]: 📊 状态：航点1/4, 目标[5.0, 0.0, -14.0], 当前位置[  4.96765515   0.         -16.2204229 ]
+[simple_waypoint_controller_node-13] [INFO] [1752045238.435060713] [waypoint_controller]: 🎯 目标: [  5.   0. -14.] | 当前: [  4.97102113   0.         -16.2704539 ] | 误差: [0.02897887 0.         2.2704539 ] | 距离: 2.271m
+[simple_waypoint_controller_node-13] [INFO] [1752045238.435621469] [waypoint_controller]: 🎮 发送命令: X=0.014, Y=0.000, Z=1.000
+[simple_odom_publisher_node-7] [INFO] [1752045238.537235914] [simple_odom_publisher]: 📍 内置里程计 #841: 位置=(4.97, 0.00, -16.30), 速度=(0.01, 0.00, 0.00)
+[simple_waypoint_controller_node-13] [INFO] [1752045238.635563637] [waypoint_controller]: 🎯 目标: [  5.   0. -14.] | 当前: [  4.97403682   0.         -16.3204849 ] | 误差: [0.02596318 0.         2.3204849 ] | 距离: 2.321m
+[simple_waypoint_controller_node-13] [INFO] [1752045238.636383940] [waypoint_controller]: 🎮 发送命令: X=0.013, Y=0.000, Z=1.000
+[simple_waypoint_controller_node-13] [INFO] [1752045238.835200743] [waypoint_controller]: 🎯 目标: [  5.   0. -14.] | 当前: [  4.97673869   0.         -16.3705159 ] | 误差: [0.02326131 0.         2.3705159 ] | 距离: 2.371m
+[simple_waypoint_controller_node-13] [INFO] [1752045238.835685951] [waypoint_controller]: 🎮 发送命令: X=0.012, Y=0.000, Z=1.000
+[simple_odom_publisher_node-7] [INFO] [1752045238.936860644] [simple_odom_publisher]: 📍 内置里程计 #861: 位置=(4.98, 0.00, -16.40), 速度=(0.01, 0.00, 0.00)
+[simple_waypoint_controller_node-13] [INFO] [1752045239.034920081] [waypoint_controller]: 🎯 目标: [  5.   0. -14.] | 当前: [  4.97915939   0.         -16.4205469 ] | 误差: [0.02084061 0.         2.4205469 ] | 距离: 2.421m
+[simple_waypoint_controller_node-13] [INFO] [1752045239.035280343] [waypoint_controller]: 🎮 发送命令: X=0.010, Y=0.000, Z=1.000
+[simple_waypoint_controller_node-13] [INFO] [1752045239.235672897] [waypoint_controller]: 🎯 目标: [  5.   0. -14.] | 当前: [  4.98132817   0.         -16.4705779 ] | 误差: [0.01867183 0.         2.4705779 ] | 距离: 2.471m
+[simple_waypoint_controller_node-13] [INFO] [1752045239.236245193] [waypoint_controller]: 🎮 发送命令: X=0.009, Y=0.000, Z=1.000
+[simple_waypoint_controller_node-13] [WARN] [1752045239.236751968] [waypoint_controller]: ⚠️ XY方向控制命令太小！
+[simple_waypoint_controller_node-13] [INFO] [1752045239.237595967] [waypoint_controller]: 📊 状态：航点1/4, 目标[5.0, 0.0, -14.0], 当前位置[  4.98132817   0.         -16.4705779 ]
+[simple_odom_publisher_node-7] [INFO] [1752045239.337059097] [simple_odom_publisher]: 📍 内置里程计 #881: 位置=(4.98, 0.00, -16.50), 速度=(0.01, 0.00, 0.00)
+[simple_waypoint_controller_node-13] [INFO] [1752045239.434779562] [waypoint_controller]: 🎯 目标: [  5.   0. -14.] | 当前: [  4.98327126   0.         -16.5206089 ] | 误差: [0.01672874 0.         2.5206089 ] | 距离: 2.521m
+[simple_waypoint_controller_node-13] [INFO] [1752045239.435131225] [waypoint_controller]: 🎮 发送命令: X=0.008, Y=0.000, Z=1.000
+[simple_waypoint_controller_node-13] [WARN] [1752045239.435422002] [waypoint_controller]: ⚠️ XY方向控制命令太小！
+[simple_waypoint_controller_node-13] [INFO] [1752045239.636033951] [waypoint_controller]: 🎯 目标: [  5.   0. -14.] | 当前: [  4.98501215   0.         -16.5706399 ] | 误差: [0.01498785 0.         2.5706399 ] | 距离: 2.571m
+[simple_waypoint_controller_node-13] [INFO] [1752045239.636639445] [waypoint_controller]: 🎮 发送命令: X=0.007, Y=0.000, Z=1.000
+[simple_waypoint_controller_node-13] [WARN] [1752045239.637162298] [waypoint_controller]: ⚠️ XY方向控制命令太小！
+[experience_map_node-12] [INFO] [1752045239.719437792] [experience_map_node]: 轨迹点数: 900
+[simple_odom_publisher_node-7] [INFO] [1752045239.738212695] [simple_odom_publisher]: 📍 内置里程计 #901: 位置=(4.99, 0.00, -16.60), 速度=(0.01, 0.00, 0.00)
+[simple_waypoint_controller_node-13] [INFO] [1752045239.837169881] [waypoint_controller]: 🎯 目标: [  5.   0. -14.] | 当前: [  4.98657186   0.         -16.6206709 ] | 误差: [0.01342814 0.         2.6206709 ] | 距离: 2.621m
+[simple_waypoint_controller_node-13] [INFO] [1752045239.837842977] [waypoint_controller]: 🎮 发送命令: X=0.007, Y=0.000, Z=1.000
+[simple_waypoint_controller_node-13] [WARN] [1752045239.838468211] [waypoint_controller]: ⚠️ XY方向控制命令太小！
+[simple_waypoint_controller_node-13] [INFO] [1752045240.037507643] [waypoint_controller]: 🎯 目标: [  5.   0. -14.] | 当前: [  4.98796927   0.         -16.6707019 ] | 误差: [0.01203073 0.         2.6707019 ] | 距离: 2.671m
+[simple_waypoint_controller_node-13] [INFO] [1752045240.038232508] [waypoint_controller]: 🎮 发送命令: X=0.006, Y=0.000, Z=1.000
+[simple_waypoint_controller_node-13] [WARN] [1752045240.038815363] [waypoint_controller]: ⚠️ XY方向控制命令太小！
+[simple_odom_publisher_node-7] [INFO] [1752045240.138657282] [simple_odom_publisher]: 📍 内置里程计 #921: 位置=(4.99, 0.00, -16.70), 速度=(0.01, 0.00, 0.00)
+[simple_waypoint_controller_node-13] [INFO] [1752045240.237004630] [waypoint_controller]: 🎯 目标: [  5.   0. -14.] | 当前: [  4.98922125   0.         -16.7207329 ] | 误差: [0.01077875 0.         2.7207329 ] | 距离: 2.721m
+[simple_waypoint_controller_node-13] [INFO] [1752045240.237842998] [waypoint_controller]: 🎮 发送命令: X=0.005, Y=0.000, Z=1.000
+[simple_waypoint_controller_node-13] [WARN] [1752045240.238625160] [waypoint_controller]: ⚠️ XY方向控制命令太小！
+[simple_waypoint_controller_node-13] [INFO] [1752045240.239816743] [waypoint_controller]: 📊 状态：航点1/4, 目标[5.0, 0.0, -14.0], 当前位置[  4.98922125   0.         -16.7207329 ]
+[image_processing_node-9] [INFO] [1752045240.274231858] [image_processing_node]: 🔍 处理帧#61: 检测到9个特征点
+[simple_waypoint_controller_node-13] [INFO] [1752045240.437249359] [waypoint_controller]: 🎯 目标: [  5.   0. -14.] | 当前: [  4.99034294   0.         -16.7707639 ] | 误差: [0.00965706 0.         2.7707639 ] | 距离: 2.771m
+[simple_waypoint_controller_node-13] [INFO] [1752045240.437926186] [waypoint_controller]: 🎮 发送命令: X=0.005, Y=0.000, Z=1.000
+[simple_waypoint_controller_node-13] [WARN] [1752045240.438503072] [waypoint_controller]: ⚠️ XY方向控制命令太小！
+[simple_odom_publisher_node-7] [INFO] [1752045240.538566768] [simple_odom_publisher]: 📍 内置里程计 #941: 位置=(4.99, 0.00, -16.80), 速度=(0.00, 0.00, 0.00)
+[simple_waypoint_controller_node-13] [INFO] [1752045240.639079534] [waypoint_controller]: 🎯 目标: [  5.   0. -14.] | 当前: [  4.99134791   0.         -16.8207949 ] | 误差: [0.00865209 0.         2.8207949 ] | 距离: 2.821m
+

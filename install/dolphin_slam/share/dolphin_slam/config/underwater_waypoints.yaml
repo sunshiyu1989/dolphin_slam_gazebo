@@ -1,0 +1,71 @@
+# 水下3D航点配置文件
+# 设计一个合理的水下搜索模式
+
+simple_waypoint_controller_node:
+  ros__parameters:
+    # 航点序列 - 3D水下搜索模式
+    waypoints:
+      # 阶段1: 下潜到工作深度
+      - x: 0.0
+        y: 0.0  
+        z: -8.0
+        
+      # 阶段2: 矩形搜索模式
+      - x: 10.0
+        y: 0.0
+        z: -8.0
+        
+      - x: 10.0
+        y: 10.0
+        z: -8.0
+        
+      - x: -10.0
+        y: 10.0
+        z: -8.0
+        
+      - x: -10.0
+        y: -10.0
+        z: -8.0
+        
+      - x: 10.0
+        y: -10.0
+        z: -8.0
+        
+      # 阶段3: 更深层探索
+      - x: 5.0
+        y: 5.0
+        z: -12.0
+        
+      - x: -5.0
+        y: -5.0
+        z: -12.0
+        
+      # 阶段4: 返回起点
+      - x: 0.0
+        y: 0.0
+        z: -5.0
+    
+    # 控制参数
+    waypoint_tolerance: 2.0      # 航点容忍度（米）
+    max_linear_speed: 1.5        # 最大线速度（m/s）
+    max_angular_speed: 1.0       # 最大角速度（rad/s）
+    
+    # PID控制参数
+    pid_linear:
+      kp: 1.0
+      ki: 0.1
+      kd: 0.05
+      
+    pid_angular:
+      kp: 2.0
+      ki: 0.2
+      kd: 0.1
+      
+    # 话题配置
+    odometry_topic: "/dolphin_slam/odometry"
+    cmd_vel_topic: "/cmd_vel"
+    
+    # 调试
+    enable_debug: true
+    publish_path: true
+    path_topic: "/waypoint_path"

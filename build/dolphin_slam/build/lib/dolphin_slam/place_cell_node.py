@@ -1,108 +1,64 @@
 #!/usr/bin/env python3
 """
-Dolphin SLAM - 位置细胞网络 ROS2 节点 (完全修复版)
-正确导入和使用PlaceCellNetwork类
+简单修复版位置细胞网络节点
 """
 
 import rclpy
 from rclpy.node import Node
 from nav_msgs.msg import Odometry
 from std_msgs.msg import Float32MultiArray
-from visualization_msgs.msg import MarkerArray, Marker
-from geometry_msgs.msg import Point
 import numpy as np
+from scipy.ndimage import gaussian_filter
 from typing import Optional
-import sys
-import os
-import traceback
-from pathlib import Path
+import time
 
 class PlaceCellNode(Node):
-    """位置细胞网络 ROS2 节点 (完全修复版)"""
+    """简单修复版位置细胞网络节点"""
     
     def __init__(self):
         super().__init__('place_cell_node')
         
-        # 声明参数
-        self.declare_parameters(
-            namespace='',
-            parameters=[
-                ('odometry_topic', '/dolphin_slam/odometry'),
-                ('visual_match_topic', '/local_view/matches'),
-                ('activity_topic', '/place_cells/activity'),
-                ('neurons_per_dimension', 16),
-                ('update_rate', 5.0),  # 降低到5Hz避免过载
-                ('activation_threshold', 0.01),
-                ('debug_mode', True),
-            ]
-        )
+        # 🔧 修复的参数 - 硬编码，避免任何错误
+        self.neurons_per_dimension = 16
+        self.spatial_scale = 0.3125  # 正确的空间尺度
+        self.workspace_center = np.array([2.5, 0.0, -14.5])  # 正确的工作空间中心
+        self.update_rate = 20.0
+        self.major_interval = 100
         
-        # 获取参数
-        self.update_rate = self.get_parameter('update_rate').value
-        self.neurons_per_dimension = self.get_parameter('neurons_per_dimension').value
-        self.activation_threshold = self.get_parameter('activation_threshold').value
-        self.debug_mode = self.get_parameter('debug_mode').value
+        # 路径积分参数
+        self.movement_threshold = 0.01
+        self.path_integration_strength = 2.0
+        self.activity_injection_radius = 1.2
         
-        # 尝试导入PlaceCellNetwork
-        self.place_cell_network = None
-        self.import_success = False
+        # 初始化网络
+        self.total_neurons = self.neurons_per_dimension ** 3
+        self.activity = np.random.random(
+            (self.neurons_per_dimension, self.neurons_per_dimension, self.neurons_per_dimension)
+        ) * 0.1
         
-        try:
-            # 方法1: 直接导入
-            sys.path.insert(0, str(Path(__file__).parent.parent / 'dolphin_slam'))
-            from place_cell_network import PlaceCellNetwork
-            
-            self.place_cell_network = PlaceCellNetwork(
-                neurons_per_dim=self.neurons_per_dimension,
-                neurons_step=0.25,
-                recurrent_conn_std=2.0,
-                input_learning_rate=0.1,
-                min_input_age=10,
-                weight_function='mexican_hat'
-            )
-            
-            # 强制重置网络并设置初始活动
-            self.place_cell_network.reset()
-            self.import_success = True
-            
-            initial_max = np.max(self.place_cell_network.activity)
-            active_count = np.sum(self.place_cell_network.activity > self.activation_threshold)
-            
-            self.get_logger().info(f'✅ 成功导入PlaceCellNetwork!')
-            self.get_logger().info(f'   网络尺寸: {self.neurons_per_dimension}³ = {self.neurons_per_dimension**3} 神经元')
-            self.get_logger().info(f'   初始最大活动: {initial_max:.3f}')
-            self.get_logger().info(f'   活跃神经元数: {active_count}')
-            
-        except ImportError as e:
-            self.get_logger().error(f'❌ 导入PlaceCellNetwork失败: {e}')
-            self.get_logger().error(f'   Python路径: {sys.path}')
-            self.get_logger().info('🔄 使用备用实现...')
-            self.create_fallback_network()
-            
-        except Exception as e:
-            self.get_logger().error(f'❌ 创建PlaceCellNetwork失败: {e}')
-            self.get_logger().error(f'   错误详情: {traceback.format_exc()}')
-            self.get_logger().info('🔄 使用备用实现...')
-            self.create_fallback_network()
+        # 在中心注入初始活动
+        center_pos = 8  # 16 // 2 = 8
+        self._inject_gaussian_activity([center_pos, center_pos, center_pos], strength=2.0, radius=2.0)
         
-        # 状态变量
-        self.last_odometry: Optional[Odometry] = None
-        self.last_position = np.zeros(3)
-        self.last_timestamp = None
+        # 状态跟踪
+        self.last_position = None
+        self.last_odometry_time = None
         self.update_count = 0
-        self.odometry_received = False
+        self.position_updates = 0
+        self.total_distance = 0.0
+        self.visual_updates = 0
         
         # 订阅者
         self.odometry_sub = self.create_subscription(
             Odometry,
-            self.get_parameter('odometry_topic').value,
+            '/dolphin_slam/odometry',
             self.odometry_callback,
             10
         )
         
         self.visual_match_sub = self.create_subscription(
             Float32MultiArray,
-            self.get_parameter('visual_match_topic').value,
+            '/local_view/matches',
             self.visual_match_callback,
             10
         )
@@ -110,13 +66,7 @@ class PlaceCellNode(Node):
         # 发布者
         self.activity_pub = self.create_publisher(
             Float32MultiArray,
-            self.get_parameter('activity_topic').value,
-            10
-        )
-        
-        self.visualization_pub = self.create_publisher(
-            MarkerArray,
-            '/place_cells/visualization',
+            '/place_cells/activity',
             10
         )
         
@@ -126,155 +76,224 @@ class PlaceCellNode(Node):
             self.update_network
         )
         
-        self.stats_timer = self.create_timer(5.0, self.publish_statistics)
-        
-        self.get_logger().info(f'位置细胞网络节点已启动: {self.neurons_per_dimension}³ 神经元')
-        
-    def create_fallback_network(self):
-        """创建备用网络实现"""
-        self.get_logger().info('🔧 创建备用位置细胞网络...')
-        
-        # 简单但有效的网络实现
-        total_neurons = self.neurons_per_dimension ** 3
-        
-        # 创建具有初始活动的网络
-        self.fallback_activity = np.zeros(total_neurons, dtype=np.float32)
-        
-        # 在中心区域创建高斯分布的活动
-        center_idx = total_neurons // 2
-        sigma = total_neurons * 0.1
-        
-        for i in range(total_neurons):
-            dist = abs(i - center_idx)
-            self.fallback_activity[i] = np.exp(-dist**2 / (2 * sigma**2)) * 0.8
-        
-        # 添加一些随机活动
-        self.fallback_activity += np.random.random(total_neurons) * 0.2
-        
-        # 归一化
-        self.fallback_activity = np.clip(self.fallback_activity, 0, 1)
-        
-        initial_max = np.max(self.fallback_activity)
-        active_count = np.sum(self.fallback_activity > self.activation_threshold)
-        
-        self.get_logger().info(f'✅ 备用网络已创建')
-        self.get_logger().info(f'   初始最大活动: {initial_max:.3f}')
-        self.get_logger().info(f'   活跃神经元数: {active_count}')
+        # 启动消息
+        self.get_logger().info('🎯 初始化网络，中心位置: (8, 8, 8)')
+        self.get_logger().info('🧠 简单修复版位置细胞网络已启动: 16³神经元, 空间尺度=0.3125m')
+        self.get_logger().info('🌍 工作空间中心: [2.5, 0.0, -14.5]')
         
     def odometry_callback(self, msg: Odometry):
         """处理里程计数据"""
-        self.last_odometry = msg
-        self.odometry_received = True
+        current_time = self.get_clock().now()
         
-        current_position = np.array([
+        # 提取位置信息
+        current_pos = np.array([
             msg.pose.pose.position.x,
             msg.pose.pose.position.y,
             msg.pose.pose.position.z
         ])
         
-        velocity = np.array([
-            msg.twist.twist.linear.x,
-            msg.twist.twist.linear.y,
-            msg.twist.twist.linear.z
-        ])
-        
-        # 🔧 修复：使用消息时间戳
-        current_time = msg.header.stamp.sec + msg.header.stamp.nanosec * 1e-9
-        
-        if self.last_timestamp is not None:
-            dt = current_time - self.last_timestamp
+        # 路径积分更新
+        if self.last_position is not None:
+            displacement = current_pos - self.last_position
+            distance = np.linalg.norm(displacement)
             
-            if 0.001 < dt < 2.0 and self.import_success and self.place_cell_network:
-                try:
-                    angular_velocity = 0.0
-                    self.place_cell_network.path_integration_update(velocity, angular_velocity, dt)
-                    
-                    if self.debug_mode and self.update_count % 50 == 0:
-                        self.get_logger().info(f'🔄 路径积分更新: dt={dt:.3f}s, 速度={np.linalg.norm(velocity):.3f}m/s')
-                        
-                except Exception as e:
-                    self.get_logger().debug(f'路径积分更新失败: {e}')
-            
-            elif 0.001 < dt < 2.0 and not self.import_success:
-                self.update_fallback_network(velocity, dt)
-        
-        self.last_position = current_position
-        self.last_timestamp = current_time
-        
-    def update_fallback_network(self, velocity, dt):
-        """更新备用网络"""
-        # 简单的活动传播
-        speed = np.linalg.norm(velocity)
-        if speed > 0.01:
-            # 添加一些动态性
-            self.fallback_activity *= 0.98  # 衰减
-            
-            # 添加新活动
-            shift = int(speed * dt * 100) % len(self.fallback_activity)
-            if shift > 0:
-                self.fallback_activity = np.roll(self.fallback_activity, shift)
+            if distance > self.movement_threshold:
+                self._apply_strong_path_integration(displacement)
+                self.total_distance += distance
+                self.position_updates += 1
                 
-            # 添加噪声
-            self.fallback_activity += np.random.random(len(self.fallback_activity)) * 0.05
-            self.fallback_activity = np.clip(self.fallback_activity, 0, 1)
+                # 每次移动都记录
+                if self.position_updates % 10 == 0:
+                    center = self._get_activity_center()
+                    world_center = self._neuron_to_world_coords(center)
+                    self.get_logger().info(
+                        f'🚶 路径积分更新#{self.position_updates}: '
+                        f'位移={displacement}, 距离={distance:.3f}m, '
+                        f'神经元中心={center}, 世界中心={world_center}'
+                    )
+        
+        self.last_position = current_pos
+        self.last_odometry_time = current_time
         
     def visual_match_callback(self, msg: Float32MultiArray):
         """处理视觉匹配数据"""
-        if len(msg.data) >= 2 and self.import_success and self.place_cell_network:
-            template_id = int(msg.data[0])
-            similarity = msg.data[1]
-            
-            try:
-                self.place_cell_network.visual_input_update(template_id, similarity)
-            except Exception as e:
-                self.get_logger().debug(f'视觉输入更新失败: {e}')
+        if len(msg.data) > 0:
+            visual_strength = max(msg.data) if msg.data else 0.0
+            if visual_strength > 0.3:
+                peak_pos = self._get_activity_peak()
+                self._inject_gaussian_activity(
+                    peak_pos, 
+                    strength=visual_strength * 0.8,
+                    radius=1.2
+                )
+                self.visual_updates += 1
+    
+    def _neuron_to_world_coords(self, neuron_pos):
+        """🔧 修复版：神经元坐标到世界坐标转换"""
+        center_offset = 8.0  # 16 / 2 = 8
+        # 标准转换：(神经元坐标 - 中心偏移) × 空间尺度 + 工作空间中心
+        relative_pos = (np.array(neuron_pos) - center_offset) * self.spatial_scale
+        world_pos = relative_pos + self.workspace_center
+        return world_pos
+    
+    def _world_to_neuron_coords(self, world_pos):
+        """🔧 修复版：世界坐标到神经元坐标转换"""
+        center_offset = 8.0  # 16 / 2 = 8
+        # 逆向转换：(世界坐标 - 工作空间中心) ÷ 空间尺度 + 中心偏移
+        relative_pos = np.array(world_pos) - self.workspace_center
+        neuron_coords = relative_pos / self.spatial_scale + center_offset
+        return neuron_coords
         
+    def _apply_strong_path_integration(self, displacement):
+        """强化版路径积分"""
+        # 转换到神经元空间
+        neuron_displacement = displacement / self.spatial_scale
+        
+        # 获取当前活动峰
+        current_peak = self._get_activity_peak()
+        
+        # 计算新位置
+        new_peak = np.array(current_peak) + neuron_displacement
+        
+        # 处理边界条件
+        new_peak = np.clip(new_peak, 0, self.neurons_per_dimension - 1)
+        
+        # 强力注入活动
+        self._inject_gaussian_activity(
+            new_peak, 
+            strength=self.path_integration_strength,
+            radius=self.activity_injection_radius
+        )
+        
+        # 在移动路径上注入活动
+        steps = 3
+        for i in range(1, steps):
+            intermediate_pos = current_peak + neuron_displacement * (i / steps)
+            intermediate_pos = np.clip(intermediate_pos, 0, self.neurons_per_dimension - 1)
+            self._inject_gaussian_activity(
+                intermediate_pos,
+                strength=self.path_integration_strength * 0.5,
+                radius=0.8
+            )
+    
+    def _inject_gaussian_activity(self, center_pos, strength=1.0, radius=1.0):
+        """注入高斯活动"""
+        try:
+            center_pos = np.array(center_pos, dtype=float)
+            
+            x, y, z = np.meshgrid(
+                np.arange(self.neurons_per_dimension),
+                np.arange(self.neurons_per_dimension),
+                np.arange(self.neurons_per_dimension),
+                indexing='ij'
+            )
+            
+            dist_sq = ((x - center_pos[0])**2 + 
+                      (y - center_pos[1])**2 + 
+                      (z - center_pos[2])**2)
+            
+            gaussian = strength * np.exp(-dist_sq / (2 * radius**2))
+            self.activity += gaussian
+            self.activity = np.clip(self.activity, 0, 10.0)
+            
+        except Exception as e:
+            self.get_logger().error(f"活动注入失败: {e}")
+    
+    def _get_activity_center(self):
+        """计算活动中心"""
+        if np.max(self.activity) == 0:
+            return np.array([8.0, 8.0, 8.0])  # 默认中心
+        
+        x, y, z = np.meshgrid(
+            np.arange(self.neurons_per_dimension),
+            np.arange(self.neurons_per_dimension), 
+            np.arange(self.neurons_per_dimension),
+            indexing='ij'
+        )
+        
+        total_activity = np.sum(self.activity)
+        if total_activity > 0:
+            center_x = np.sum(x * self.activity) / total_activity
+            center_y = np.sum(y * self.activity) / total_activity
+            center_z = np.sum(z * self.activity) / total_activity
+            return np.array([center_x, center_y, center_z])
+        else:
+            return np.array([8.0, 8.0, 8.0])
+    
+    def _get_activity_peak(self):
+        """获取活动峰位置"""
+        max_idx = np.unravel_index(np.argmax(self.activity), self.activity.shape)
+        return np.array(max_idx, dtype=float)
+    
+    def _compute_network_stats(self):
+        """计算网络统计"""
+        peak = np.max(self.activity)
+        mean = np.mean(self.activity)
+        std = np.std(self.activity)
+        active_neurons = np.sum(self.activity > 0.1)
+        center = self._get_activity_center()
+        world_center = self._neuron_to_world_coords(center)
+        
+        return {
+            'peak': peak,
+            'mean': mean,
+            'std': std,
+            'active_neurons': active_neurons,
+            'activation_rate': active_neurons / self.total_neurons,
+            'center': center,
+            'world_center': world_center
+        }
+    
     def update_network(self):
-        """更新神经网络"""
+        """网络主更新循环"""
         try:
             self.update_count += 1
             
-            if self.import_success and self.place_cell_network:
-                # 使用真正的PlaceCellNetwork
-                self.place_cell_network.apply_recurrent_dynamics()
-                activity_data = self.place_cell_network.activity.flatten()
-            else:
-                # 使用备用网络
-                activity_data = self.fallback_activity
+            # 轻微的全局衰减
+            self.activity *= 0.99
             
-            # 发布活动数据
+            # 归一化
+            if np.max(self.activity) > 0:
+                self.activity = self.activity / np.max(self.activity) * 8.0
+            
+            # 发布活动
             msg = Float32MultiArray()
-            msg.data = activity_data.astype(float).tolist()
+            msg.data = self.activity.flatten().tolist()
             self.activity_pub.publish(msg)
             
-        except Exception as e:
-            self.get_logger().error(f'网络更新错误: {e}')
-            
-    def publish_statistics(self):
-        """发布统计信息"""
-        try:
-            if self.import_success and self.place_cell_network:
-                activity_data = self.place_cell_network.activity.flatten()
-                center = self.place_cell_network.get_activity_center()
-            else:
-                activity_data = self.fallback_activity
-                center = [8, 8, 8]  # 默认中心
+            # 定期报告
+            if self.update_count % self.major_interval == 0:
+                self.report_status()
                 
-            max_activity = np.max(activity_data)
-            active_neurons = np.sum(activity_data > self.activation_threshold)
-            total_neurons = len(activity_data)
-            
-            status = "真实PlaceCellNetwork" if self.import_success else "备用网络"
-            odom_status = "有数据" if self.odometry_received else "无数据"
-            
-            self.get_logger().info(
-                f'网络状态({status}): {active_neurons}/{total_neurons} 神经元活跃, '
-                f'最大活动: {max_activity:.3f}, 里程计: {odom_status}, '
-                f'活动中心: [{center[0]:.1f}, {center[1]:.1f}, {center[2]:.1f}]'
-            )
-            
         except Exception as e:
-            self.get_logger().error(f'统计发布错误: {e}')
+            self.get_logger().error(f"网络更新失败: {e}")
+    
+    def report_status(self):
+        """定期报告网络状态"""
+        stats = self._compute_network_stats()
+        
+        status_icon = "✅" if stats['activation_rate'] > 0.05 else "⚠️"
+        
+        self.get_logger().info(
+            f"🧠 网络更新#{self.update_count}: "
+            f"峰值={stats['peak']:.4f}, "
+            f"均值={stats['mean']:.4f}±{stats['std']:.4f}, "
+            f"活跃={stats['active_neurons']}/{self.total_neurons}"
+            f"({stats['activation_rate']:.1%}){status_icon}, "
+            f"神经元中心=({stats['center'][0]:.1f},{stats['center'][1]:.1f},{stats['center'][2]:.1f}), "
+            f"对应世界=({stats['world_center'][0]:.1f},{stats['world_center'][1]:.1f},{stats['world_center'][2]:.1f}), "
+            f"位置更新={self.position_updates}次, " 
+            f"总移动距离={self.total_distance:.2f}m, "
+            f"视觉更新={self.visual_updates}次"
+        )
+        
+        if self.position_updates > 0 and self.last_position is not None:
+            avg_distance = self.total_distance / self.position_updates
+            self.get_logger().info(
+                f"📍 位置调试: 最新位置=({self.last_position[0]:.2f}, "
+                f"{self.last_position[1]:.2f}, {self.last_position[2]:.2f}), "
+                f"平均移动距离={avg_distance:.3f}m"
+            )
 
 def main(args=None):
     rclpy.init(args=args)
@@ -283,9 +302,7 @@ def main(args=None):
         node = PlaceCellNode()
         rclpy.spin(node)
     except KeyboardInterrupt:
-        print("\n🛑 用户中断")
-    except Exception as e:
-        print(f'❌ 节点错误: {e}')
+        pass
     finally:
         if rclpy.ok():
             rclpy.shutdown()

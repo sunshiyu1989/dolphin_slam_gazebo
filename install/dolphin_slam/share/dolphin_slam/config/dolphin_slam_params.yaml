@@ -1,5 +1,5 @@
-# 修复版 Dolphin SLAM 配置文件
-# 统一话题命名，确保节点间正确通信
+# 最终优化版 dolphin_slam_params.yaml
+# 配合修复版 place_cell_node.py 使用
 
 robot_state_node:
   ros__parameters:
@@ -12,35 +12,86 @@ robot_state_node:
 
 image_processing_node:
   ros__parameters:
-    camera_path: "/media/psf/Samsung T7/SLAM Data/Sunboat_03-09-2023/2023-09-03-07-58-37/camera"
-    sonar_path: "/media/psf/Samsung T7/SLAM Data/Sunboat_03-09-2023/2023-09-03-07-58-37/sonar"
     feature_type: "SIFT"
-    max_features: 500
+    max_features: 200
+    process_every_n_frames: 1
     enable_visualization: true
     camera_topic: "/camera/image_raw"
     sonar_topic: "/sonar/image_raw"
     descriptors_topic: "/features/descriptors"
     keypoints_topic: "/features/keypoints"
+    
+    # SIFT参数优化（水下环境）
+    sift_n_features: 200
+    sift_contrastThreshold: 0.03
+    sift_edgeThreshold: 20
+    sift_sigma: 1.2
 
 local_view_node:
   ros__parameters:
-    matching_algorithm: "fabmap"
-    similarity_threshold: 0.65
-    vocabulary_size: 500
+    matching_algorithm: "temporal_feature_matching"
+    similarity_threshold: 0.5
+    max_templates: 25
+    enable_debug: false
+    debug_level: 0
+    min_match_count: 12
+    match_ratio_threshold: 0.75
+    temporal_weight_factor: 3.0
+    recent_template_priority: 8
     descriptors_topic: "/features/descriptors"
     matches_topic: "/local_view/matches"
+    enable_underwater_report: false
+    
+    # 平衡的水下环境参数
+    underwater_mode: true
+    frame_skip_threshold: 0.9
+    max_matches_per_second: 20
+    min_template_age: 2.0
+    significant_change_threshold: 0.08
+    temporal_smoothing_window: 3
 
+# 🔧 最终优化的位置细胞参数
 place_cell_node:
   ros__parameters:
+    # 基础参数
+    visual_similarity_threshold: 0.7
+    enable_visual_debug: false
     neurons_per_dimension: 16
     update_rate: 20.0
-    odometry_topic: "/dolphin_slam/odometry"    # 修正：统一使用dolphin_slam命名空间
+    major_report_interval: 300
+    spatial_scale: 30.0                     # 保持30m空间尺度
+    enable_path_integration: true
+    odometry_topic: "/dolphin_slam/odometry"
     visual_match_topic: "/local_view/matches"
     activity_topic: "/place_cells/activity"
+    
+    # 优化的CAN参数
+    excitation_radius: 1.3
+    inhibition_strength: 0.3
+    activity_threshold: 0.1
+    normalization_factor: 8.0
+    visual_update_cooldown: 0.5
+    min_visual_change_threshold: 0.03
+    
+    # 🔧 增强的抑制参数
+    global_inhibition_factor: 0.5
+    winner_take_all_strength: 0.3
+    lateral_inhibition_radius: 2.0
+    decay_rate: 0.12                        # 🔧 增加衰减率，减少惯性
+    
+    # 🔧 强化的输入强度参数
+    position_input_strength: 4.0
+    visual_input_strength: 2.0
+    position_input_override: 40.0           # 🔧 大幅增强位置输入
+    
+    # 🔧 精确跟踪参数
+    movement_threshold: 0.05                # 移动检测阈值
+    enable_position_debug: true             # 启用详细调试
+    center_tracking_strength: 0.7           # 中心跟踪强度
 
 experience_map_node:
   ros__parameters:
-    odometry_topic: "/dolphin_slam/odometry"    # 修正：统一使用dolphin_slam命名空间
+    odometry_topic: "/dolphin_slam/odometry"
     place_cell_topic: "/place_cells/activity"
     visual_match_topic: "/local_view/matches"
     match_threshold: 0.75

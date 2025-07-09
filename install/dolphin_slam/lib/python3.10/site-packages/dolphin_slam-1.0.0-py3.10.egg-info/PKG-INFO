@@ -1,11 +1,11 @@
 Metadata-Version: 2.1
 Name: dolphin-slam
 Version: 1.0.0
-Summary: Bio-inspired SLAM for underwater vehicles
+Summary: Dolphin SLAM package for underwater environments
 Home-page: UNKNOWN
-Maintainer: Your Name
-Maintainer-email: your_email@example.com
-License: Apache-2.0
+Maintainer: cetc3
+Maintainer-email: cetc3@example.com
+License: Apache License 2.0
 Platform: UNKNOWN
 License-File: LICENSE.txt
 

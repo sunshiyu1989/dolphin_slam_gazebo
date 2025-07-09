@@ -1,1 +1,0 @@
-/home/parallels/dolphin_slam_ws/src/dolphin_slam/scripts/final_fix_script.py
