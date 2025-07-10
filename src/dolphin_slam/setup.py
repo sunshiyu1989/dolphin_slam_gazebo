@@ -40,8 +40,12 @@ setup(
             'simple_waypoint_controller_node = nodes.simple_waypoint_controller_node:main',
             'trajectory_evaluator_node = nodes.trajectory_evaluator_node:main',
             
-            # 如果将来要添加增强版控制器
-            'enhanced_waypoint_controller_node = nodes.enhanced_waypoint_controller_node:main',
+            # 增强版控制器
+            'enhanced_waypoint_controller_node = dolphin_slam.enhanced_waypoint_controller_node:main',
+            'force_command_publisher = dolphin_slam.force_command_publisher:main',
+            
+            # 诊断和测试节点
+            'visual_chain_diagnostic = dolphin_slam.visual_chain_diagnostic:main',
         ],
     },
 )
