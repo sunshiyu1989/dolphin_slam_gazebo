@@ -34,7 +34,7 @@ def generate_launch_description():
         default=os.path.join(pkg_share, 'worlds', 'underwater_world_enhanced.world'))
     robot_model = LaunchConfiguration('robot_model', default='auv_robot')
     rviz_config = LaunchConfiguration('rviz_config',
-        default=os.path.join(pkg_share, 'rviz', 'dolphin_slam_sim.rviz'))
+        default=os.path.join(pkg_share, 'rviz', 'dolphin_slam_simple.rviz'))
     enable_rviz = LaunchConfiguration('enable_rviz', default='true')
     record_bag = LaunchConfiguration('record_bag', default='false')
     
@@ -68,6 +68,11 @@ def generate_launch_description():
         'record_bag',
         default_value='false',
         description='是否录制 ROS bag')
+        
+    declare_gui_cmd = DeclareLaunchArgument(
+        'gui',
+        default_value='true',
+        description='是否启动 Gazebo GUI')
 
     # Gazebo 仿真器
     gazebo_launch = IncludeLaunchDescription(
@@ -83,7 +88,8 @@ def generate_launch_description():
             'verbose': 'true',
             'physics': 'ode',
             'debug': 'false',
-            'pause': 'false'
+            'pause': 'false',
+            'gui': LaunchConfiguration('gui')
         }.items()
     )
 
@@ -114,7 +120,7 @@ def generate_launch_description():
             '-topic', 'robot_description',
             '-x', '0.0',
             '-y', '0.0', 
-            '-z', '-10.0',  # 水下10米
+            '-z', '-3.0',  # 水下3米，浅水区域
             '-Y', '0.0'     # 朝向
         ],
         output='screen'
@@ -135,7 +141,8 @@ def generate_launch_description():
         package='dolphin_slam',
         executable='simple_odom_publisher_node',
         name='simple_odom_publisher',
-        output='screen',
+        output='log',
+        arguments=['--ros-args', '--log-level', 'WARN'],
         parameters=[{
             'use_sim_time': use_sim_time,
             'robot_name': 'auv_robot',
@@ -150,7 +157,8 @@ def generate_launch_description():
         package='dolphin_slam',
         executable='trajectory_evaluator_node',
         name='trajectory_evaluator',
-        output='screen',
+        output='log',
+        arguments=['--ros-args', '--log-level', 'WARN'],
         parameters=[{
             'use_sim_time': use_sim_time,
             'gps_origin_lat': 29.5014,
@@ -163,11 +171,18 @@ def generate_launch_description():
         package='dolphin_slam',
         executable='image_processing_node',
         name='image_processing_node',
-        output='screen',
+        output='log',
+        arguments=['--ros-args', '--log-level', 'WARN'],
         parameters=[{
             'use_sim_time': use_sim_time,
             'feature_type': 'SIFT',
-            'max_features': 1000
+            'max_features': 1000,
+            'camera_topic': '/forward_camera/image_raw',  # 🔧 修复：使用Gazebo相机话题
+            'sonar_topic': '/sonar/image_raw',
+            'descriptors_topic': '/features/descriptors',
+            'keypoints_topic': '/features/keypoints',
+            'debug_mode': True,
+            'process_every_n_frames': 1  # 处理每一帧
         }]
     )
     
@@ -176,12 +191,19 @@ def generate_launch_description():
         package='dolphin_slam',
         executable='local_view_node',
         name='local_view_node',
-        output='screen',
+        output='log',
+        arguments=['--ros-args', '--log-level', 'WARN'],
         parameters=[{
             'use_sim_time': use_sim_time,
-            'underwater_mode': True,
-            'frame_skip_threshold': 0.9,
-            'max_match_rate': 20.0
+            'underwater_mode': False,  # 🔧 关闭水下模式，减少过滤
+            'frame_skip_threshold': 0.7,  # 🔧 降低跳过阈值
+            'max_matches_per_second': 50,  # 🔧 增加匹配频率
+            'descriptors_topic': '/features/descriptors',
+            'matches_topic': '/local_view/matches',
+            'enable_debug': True,
+            'debug_level': 1,
+            'similarity_threshold': 0.4,  # 🔧 降低相似度阈值
+            'min_match_count': 10  # 🔧 降低最小匹配数
         }]
     )
     
@@ -190,11 +212,20 @@ def generate_launch_description():
         package='dolphin_slam',
         executable='place_cell_node',
         name='place_cell_node',
-        output='screen',
+        output='log',
+        arguments=['--ros-args', '--log-level', 'WARN'],
         parameters=[{
             'use_sim_time': use_sim_time,
             'neurons_per_dimension': 16,
-            'spatial_scale': 1.2
+            'spatial_scale': 2.0,  # 🔧 修复空间尺度
+            'workspace_center': [0.0, 0.0, -10.0],  # 🔧 设置工作空间中心
+            'odometry_topic': '/dolphin_slam/odometry',
+            'visual_match_topic': '/local_view/matches',
+            'activity_topic': '/place_cells/activity',
+            'debug_mode': True,
+            'movement_threshold': 0.05,  # 🔧 移动检测阈值
+            'path_integration_strength': 3.0,  # 🔧 路径积分强度
+            'activity_injection_radius': 1.5  # 🔧 活动注入半径
         }]
     )
     
@@ -203,24 +234,46 @@ def generate_launch_description():
         package='dolphin_slam',
         executable='experience_map_node',
         name='experience_map_node',
-        output='screen',
+        output='log',
+        arguments=['--ros-args', '--log-level', 'WARN'],
         parameters=[{
             'use_sim_time': use_sim_time,
             'match_threshold': 0.8
         }]
     )
     
-    # 航点控制器
+    # 🔧 视觉链路诊断节点（暂时注释掉）
+    # visual_diagnostic = Node(
+    #     package='dolphin_slam',
+    #     executable='visual_chain_diagnostic',
+    #     name='visual_chain_diagnostic',
+    #     output='screen',
+    #     parameters=[{
+    #         'use_sim_time': use_sim_time
+    #     }]
+    # )
+    
+    # 🔧 力命令发布器 - 将cmd_vel转换为力命令
+    force_command_publisher = Node(
+        package='dolphin_slam',
+        executable='force_command_publisher',
+        name='force_command_publisher',
+        output='log',
+        arguments=['--ros-args', '--log-level', 'WARN'],
+        parameters=[{
+            'use_sim_time': use_sim_time
+        }]
+    )
+
+    # 🔧 增强版航点控制器
     waypoint_controller = Node(
         package='dolphin_slam',
-        executable='simple_waypoint_controller_node',
-        name='waypoint_controller',
-        output='screen',
+        executable='enhanced_waypoint_controller_node',
+        name='enhanced_waypoint_controller',
+        output='log',
+        arguments=['--ros-args', '--log-level', 'WARN'],
         parameters=[{
-            'use_sim_time': use_sim_time,
-            'cruise_speed': 1.0,
-            'angular_speed': 0.5,
-            'waypoint_tolerance': 2.0
+            'use_sim_time': use_sim_time
         }]
     )
 
@@ -262,14 +315,15 @@ def generate_launch_description():
             image_processing_node,
             local_view_node,
             place_cell_node,
-            experience_map_node
+            experience_map_node,
+            # visual_diagnostic  # 🔧 添加诊断节点（暂时注释掉）
         ]
     )
 
     # 延迟启动控制器
     delayed_controller = TimerAction(
         period=15.0,  # 等待 15 秒让其他系统启动
-        actions=[waypoint_controller]
+        actions=[force_command_publisher, waypoint_controller]
     )
 
     # === 创建启动描述 ===
@@ -282,6 +336,7 @@ def generate_launch_description():
     ld.add_action(declare_rviz_config_cmd)
     ld.add_action(declare_enable_rviz_cmd)
     ld.add_action(declare_record_bag_cmd)
+    ld.add_action(declare_gui_cmd)
 
     # 启动 Gazebo 仿真器
     ld.add_action(gazebo_launch)

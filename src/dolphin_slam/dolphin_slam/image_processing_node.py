@@ -18,32 +18,16 @@ class ImageProcessingNode(Node):
     def __init__(self):
         super().__init__('image_processing_node')
         
-        # 声明参数
-        self.declare_parameters(
-            namespace='',
-            parameters=[
-                ('camera_topic', '/forward_camera/image_raw'),    # Gazebo相机
-                ('sonar_topic', '/sonar/image_raw'),              # Gazebo声呐  
-                ('descriptors_topic', '/features/descriptors'),
-                ('keypoints_topic', '/features/keypoints'),
-                ('feature_type', 'SIFT'),
-                ('max_features', 300),
-                ('process_every_n_frames', 3),
-                ('enable_visualization', True),
-                ('debug_mode', True),
-            ]
-        )
-        
-        # 获取参数
-        self.camera_topic = self.get_parameter('camera_topic').value
-        self.sonar_topic = self.get_parameter('sonar_topic').value
-        self.descriptors_topic = self.get_parameter('descriptors_topic').value
-        self.keypoints_topic = self.get_parameter('keypoints_topic').value
-        self.feature_type = self.get_parameter('feature_type').value
-        self.max_features = self.get_parameter('max_features').value
-        self.process_every_n = self.get_parameter('process_every_n_frames').value
-        self.enable_viz = self.get_parameter('enable_visualization').value
-        self.debug_mode = self.get_parameter('debug_mode').value
+        # 参数配置
+        self.camera_topic = '/forward_camera/image_raw'
+        self.sonar_topic = '/sonar/image_raw'
+        self.descriptors_topic = '/features/descriptors'
+        self.keypoints_topic = '/features/keypoints'
+        self.feature_type = 'SIFT'
+        self.max_features = 300
+        self.process_every_n = 3
+        self.enable_viz = True
+        self.debug_mode = True
         
         # CV Bridge
         self.bridge = CvBridge()
@@ -146,12 +130,20 @@ class ImageProcessingNode(Node):
                 
                 self.processed_frames += 1
                 
-                if self.debug_mode and self.processed_frames % 10 == 1:
+                # 🔧 降低日志输出频率 - 每100次处理显示一次
+                if not hasattr(self, '_process_count'):
+                    self._process_count = 0
+                self._process_count += 1
+                
+                if self._process_count % 100 == 1:
+                    processing_rate = (self.processed_frames / self.camera_frame_count * 100) if self.camera_frame_count > 0 else 0
                     self.get_logger().info(
-                        f'🔍 处理帧#{self.processed_frames}: 检测到{len(keypoints)}个特征点'
+                        f'📊 图像处理状态: 接收{self.camera_frame_count}帧, '
+                        f'处理{self.processed_frames}帧, 处理率{processing_rate:.1f}%'
                     )
             else:
-                if self.debug_mode:
+                # 🔧 减少警告频率 - 每100帧显示一次
+                if self.debug_mode and self.camera_frame_count % 100 == 0:
                     self.get_logger().warn(f'⚠️ 帧#{self.camera_frame_count}: 未检测到特征点')
                     
         except Exception as e:
@@ -213,7 +205,7 @@ class ImageProcessingNode(Node):
                 
                 marker.lifetime.sec = 1
                 
-                markers.markers.append(marker)
+                markers.markers = list(markers.markers) + [marker]
                 
             self.keypoints_pub.publish(markers)
             

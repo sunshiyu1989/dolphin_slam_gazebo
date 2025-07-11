@@ -36,6 +36,7 @@ class ExperienceMapNode(Node):
         self.experience_count = 0
         self.trajectory_poses = []
         self.last_log_count = 0
+        self.startup_complete = False  # 🔧 添加启动完成标志
         
         # 获取参数
         self.max_trajectory_length = self.get_parameter('max_trajectory_length').value
@@ -86,8 +87,27 @@ class ExperienceMapNode(Node):
         # 定时器
         self.update_timer = self.create_timer(0.2, self.update_map)
         self.viz_timer = self.create_timer(1.0, self.publish_visualizations)
+        self.startup_timer = self.create_timer(0.1, self.startup_check)  # 🔧 添加启动检查定时器
         
         self.get_logger().info('经验地图节点已启动 - 修复版')
+        
+    def startup_check(self):
+        """🔧 启动检查 - 清空历史轨迹数据"""
+        if not self.startup_complete:
+            # 清空轨迹数据
+            self.trajectory_poses = []
+            
+            # 🧹 发布空轨迹消息清空RViz缓冲区
+            empty_trajectory = Path()
+            empty_trajectory.header.frame_id = "map"
+            empty_trajectory.header.stamp = self.get_clock().now().to_msg()
+            empty_trajectory.poses = []  # 空轨迹
+            self.trajectory_pub.publish(empty_trajectory)
+            
+            self.get_logger().info('🧹 已清空历史轨迹数据并发布空轨迹消息，开始新的仿真')
+            self.startup_complete = True
+            # 停止启动检查定时器
+            self.startup_timer.cancel()
         
     def odometry_callback(self, msg: Odometry):
         """处理里程计数据 - 智能轨迹管理"""
@@ -114,7 +134,7 @@ class ExperienceMapNode(Node):
                 )
         
         # 定期记录轨迹状态，但不要太频繁
-        elif trajectory_count % self.log_interval == 0:
+        elif trajectory_count % (self.log_interval * 5) == 0:  # 大幅减少轨迹点数日志频率
             self.get_logger().info(f'轨迹点数: {trajectory_count}')
         
     def place_cell_callback(self, msg: Float32MultiArray):
@@ -139,7 +159,7 @@ class ExperienceMapNode(Node):
         self.experience_count += 1
         
         # 只在特定间隔记录经验数
-        if self.experience_count % (self.log_interval * 2) == 0:
+        if self.experience_count % (self.log_interval * 10) == 0:  # 大幅减少经验计数日志频率
             self.get_logger().info(f'经验计数: {self.experience_count}')
         
     def publish_visualizations(self):

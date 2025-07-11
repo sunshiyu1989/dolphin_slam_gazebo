@@ -55,7 +55,7 @@ class SimpleOdomPublisher(Node):
         self.declare_parameter('base_frame', 'base_link')
         self.declare_parameter('odom_frame', 'odom')
         self.declare_parameter('publish_tf', True)
-        self.declare_parameter('odom_rate', 50.0)  # Hz
+        self.declare_parameter('odom_rate', 2.0)  # Hz - 大幅降低频率解决RViz队列溢出
         
         # 获取参数
         self.robot_name = self.get_parameter('robot_name').value
@@ -63,6 +63,10 @@ class SimpleOdomPublisher(Node):
         self.odom_frame = self.get_parameter('odom_frame').value
         self.publish_tf = self.get_parameter('publish_tf').value
         self.odom_rate = self.get_parameter('odom_rate').value
+        if self.odom_rate is None or self.odom_rate <= 0:
+            self.odom_rate = 10.0
+        # 定时器（确保使用有效的odom_rate）
+        self.odom_timer = self.create_timer(1.0 / float(self.odom_rate), self.publish_odom)
         
         # 订阅 Gazebo 模型状态
         self.model_states_sub = self.create_subscription(
@@ -85,11 +89,12 @@ class SimpleOdomPublisher(Node):
         self.message_count = 0
         self.publish_count = 0
         
-        # 调试定时器
-        self.debug_timer = self.create_timer(5.0, self.debug_status)
+        # 调试定时器 - 大幅减少频率
+        self.debug_timer = self.create_timer(30.0, self.debug_status)
         
-        self.get_logger().info(f'🤖 简单里程计发布器已启动，机器人: {self.robot_name}')
+        self.get_logger().info(f'🤖 智能里程计发布器已启动，机器人: {self.robot_name}')
         self.get_logger().info(f'📡 发布话题: /dolphin_slam/odometry')
+        self.get_logger().info(f'⚡ 优先使用内置里程计 /odom')
 
     def model_states_callback(self, msg):
         """处理 Gazebo 模型状态消息"""
@@ -98,9 +103,8 @@ class SimpleOdomPublisher(Node):
         try:
             # 查找目标机器人
             if self.robot_name not in msg.name:
-                if self.message_count % 50 == 1:  # 每50次消息打印一次
+                if self.message_count % 200 == 1:  # 每200次消息打印一次
                     self.get_logger().warn(f'机器人 {self.robot_name} 不在模型列表中')
-                    self.get_logger().info(f'可用模型: {msg.name}')
                 return
                 
             robot_index = msg.name.index(self.robot_name)
@@ -124,22 +128,8 @@ class SimpleOdomPublisher(Node):
             odom_msg.twist.covariance = [0.05] * 36
             
             # 🔧 发布到正确的话题
-            self.odom_pub.publish(odom_msg)
-            self.publish_count += 1
+            self.last_odom_msg = odom_msg # 存储最新的odom消息
             
-            # 发布 TF 变换
-            if self.publish_tf:
-                self.publish_transform(robot_pose, odom_msg.header.stamp)
-                
-            # 调试信息（减少频率）
-            if self.publish_count % 100 == 1:  # 每100次发布打印一次
-                pos = robot_pose.position
-                self.get_logger().info(
-                    f'📍 发布里程计 #{self.publish_count}: '
-                    f'位置=({pos.x:.2f}, {pos.y:.2f}, {pos.z:.2f}) '
-                    f'-> /dolphin_slam/odometry'
-                )
-                
         except Exception as e:
             self.get_logger().error(f'处理模型状态时出错: {e}')
 
@@ -166,11 +156,25 @@ class SimpleOdomPublisher(Node):
             self.get_logger().warn(f'发布 TF 变换时出错: {e}')
 
     def debug_status(self):
-        """调试状态信息"""
-        self.get_logger().info(
-            f'📊 状态报告: 接收={self.message_count}条模型状态, '
-            f'发布={self.publish_count}条里程计消息到 /dolphin_slam/odometry'
-        )
+        """调试状态报告 - 大幅精简"""
+        try:
+            # 🔧 大幅精简状态报告 - 只在有数据时显示
+            if self.publish_count > 0:
+                self.get_logger().info(
+                    f'📊 数据源=内置里程计 ✅, 内置={self.message_count}, '
+                    f'模型={self.message_count}, 发布={self.publish_count}条到SLAM'
+                )
+        except Exception as e:
+            self.get_logger().error(f'调试状态报告失败: {e}')
+
+    # 新增发布odom的定时器方法
+    def publish_odom(self):
+        # 只发布最新的odom
+        if hasattr(self, 'last_odom_msg'):
+            self.odom_pub.publish(self.last_odom_msg)
+            self.publish_count += 1
+            if self.publish_tf:
+                self.publish_transform(self.last_odom_msg.pose.pose, self.last_odom_msg.header.stamp)
 
 
 def main(args=None):

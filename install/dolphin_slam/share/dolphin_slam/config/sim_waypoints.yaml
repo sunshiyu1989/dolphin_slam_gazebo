@@ -6,15 +6,15 @@
 # yaw: 偏航角（弧度）
 
 waypoint_missions:
-  # 默认任务
+  # 默认任务 - 浅水探索
   default:
-    name: "Square Pattern"
+    name: "Shallow Water Exploration"
     waypoints:
-      - position: [0.0, 0.0, -5.0]
+      - position: [0.0, 0.0, -3.0]
         orientation: 0.0
         hold_time: 2.0
         
-      - position: [10.0, 0.0, -5.0]
+      - position: [10.0, 0.0, -4.0]
         orientation: 0.0
         hold_time: 1.0
         
@@ -22,11 +22,11 @@ waypoint_missions:
         orientation: 1.5708  # 90度
         hold_time: 1.0
         
-      - position: [0.0, 10.0, -5.0]
+      - position: [0.0, 10.0, -4.0]
         orientation: 3.1416  # 180度
         hold_time: 1.0
         
-      - position: [0.0, 0.0, -5.0]
+      - position: [0.0, 0.0, -3.0]
         orientation: 0.0
         hold_time: 2.0
         
@@ -35,31 +35,31 @@ waypoint_missions:
     transit_mode: "direct"  # direct, spline, dubins
     depth_first: false      # 是否先调整深度
     
-  # 深度变化任务
+  # 温和深度变化任务
   depth_profile:
-    name: "Depth Profile Mission"
+    name: "Gentle Depth Profile Mission"
     waypoints:
       - position: [0.0, 0.0, -2.0]
         orientation: 0.0
         hold_time: 3.0
         
-      - position: [5.0, 0.0, -5.0]
+      - position: [5.0, 0.0, -4.0]
         orientation: 0.0
         hold_time: 2.0
         
-      - position: [10.0, 0.0, -10.0]
+      - position: [10.0, 0.0, -6.0]
         orientation: 0.0
         hold_time: 2.0
         
-      - position: [15.0, 0.0, -15.0]
+      - position: [15.0, 0.0, -8.0]
         orientation: 0.0
         hold_time: 2.0
         
-      - position: [20.0, 0.0, -10.0]
+      - position: [20.0, 0.0, -6.0]
         orientation: 0.0
         hold_time: 2.0
         
-      - position: [25.0, 0.0, -5.0]
+      - position: [25.0, 0.0, -4.0]
         orientation: 0.0
         hold_time: 2.0
         
@@ -67,28 +67,28 @@ waypoint_missions:
     transit_mode: "spline"
     maintain_altitude: false
     
-  # 螺旋下潜
-  spiral_descent:
-    name: "Spiral Descent"
+  # 温和螺旋探索
+  spiral_exploration:
+    name: "Gentle Spiral Exploration"
     type: "parametric"  # 参数化路径
     parameters:
       center: [0.0, 0.0]
       start_depth: -2.0
-      end_depth: -20.0
+      end_depth: -8.0
       radius: 5.0
-      turns: 5.0
+      turns: 3.0
       direction: "clockwise"
       
     speed_profile:
       type: "constant"
       value: 0.4  # m/s
       
-  # 搜索网格
+  # 浅水搜索网格
   search_grid:
-    name: "Lawnmower Search"
+    name: "Shallow Water Search"
     type: "lawnmower"
     parameters:
-      origin: [0.0, 0.0, -10.0]
+      origin: [0.0, 0.0, -4.0]
       length: 30.0    # 米
       width: 20.0     # 米
       spacing: 3.0    # 航线间距
@@ -98,15 +98,15 @@ waypoint_missions:
     turn_radius: 2.0
     overlap: 0.5  # 米
     
-  # 墙体跟踪
+  # 浅水墙体跟踪
   wall_following:
-    name: "Wall Following"
+    name: "Shallow Wall Following"
     waypoints:
-      - position: [0.0, 5.0, -8.0]
+      - position: [0.0, 5.0, -4.0]
         orientation: 0.0
         wall_distance: 2.0
         
-      - position: [20.0, 5.0, -8.0]
+      - position: [20.0, 5.0, -5.0]
         orientation: 0.0
         wall_distance: 2.0
         
@@ -115,27 +115,27 @@ waypoint_missions:
     maintain_distance: 2.0  # 米
     speed: 0.3
     
-  # 特征rich环境探索
+  # 浅水特征探索
   feature_rich_exploration:
-    name: "Feature Rich Area"
+    name: "Shallow Feature Exploration"
     waypoints:
-      # 靠近海底特征
-      - position: [5.0, 5.0, -18.0]
+      # 保持在浅水区域
+      - position: [5.0, 5.0, -3.0]
         orientation: 0.785  # 45度
         hold_time: 5.0
-        notes: "珊瑚礁区域"
+        notes: "浅水珊瑚区域"
         
-      - position: [8.0, 12.0, -18.5]
+      - position: [8.0, 12.0, -4.0]
         orientation: 1.57
         hold_time: 5.0
-        notes: "岩石露头"
+        notes: "浅水岩石区域"
         
-      - position: [15.0, 15.0, -19.0]
+      - position: [15.0, 15.0, -5.0]
         orientation: 2.36
         hold_time: 5.0
-        notes: "沉船位置"
+        notes: "浅水探索点"
         
-      - position: [12.0, 8.0, -17.0]
+      - position: [12.0, 8.0, -4.0]
         orientation: 3.14
         hold_time: 3.0
         notes: "返回路径"
@@ -144,37 +144,37 @@ waypoint_missions:
     imaging_mode: true  # 降低速度以获得更好的图像
     sonar_active: true
     
-  # 闭环测试路径
+  # 浅水闭环测试路径
   loop_closure_test:
-    name: "Loop Closure Test"
+    name: "Shallow Loop Closure Test"
     waypoints:
-      # 创建一个有意的闭环
-      - position: [0.0, 0.0, -10.0]
+      # 创建一个有意的闭环，保持在浅水
+      - position: [0.0, 0.0, -3.0]
         orientation: 0.0
         marker: "start"
         
-      - position: [10.0, 0.0, -10.0]
+      - position: [10.0, 0.0, -4.0]
         orientation: 0.0
         
-      - position: [15.0, 5.0, -10.0]
+      - position: [15.0, 5.0, -5.0]
         orientation: 0.785
         
-      - position: [15.0, 15.0, -10.0]
+      - position: [15.0, 15.0, -6.0]
         orientation: 1.57
         
-      - position: [10.0, 20.0, -10.0]
+      - position: [10.0, 20.0, -5.0]
         orientation: 2.36
         
-      - position: [0.0, 20.0, -10.0]
+      - position: [0.0, 20.0, -4.0]
         orientation: 3.14
         
-      - position: [-5.0, 15.0, -10.0]
+      - position: [-5.0, 15.0, -3.0]
         orientation: 3.93
         
-      - position: [-5.0, 5.0, -10.0]
+      - position: [-5.0, 5.0, -4.0]
         orientation: 4.71
         
-      - position: [0.0, 0.0, -10.0]
+      - position: [0.0, 0.0, -3.0]
         orientation: 0.0
         marker: "loop_close"
         

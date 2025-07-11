@@ -34,50 +34,25 @@ class LocalViewNode(Node):
     def __init__(self):
         super().__init__('local_view_node')
         
-        # 声明参数
-        self.declare_parameters(
-            namespace='',
-            parameters=[
-                ('descriptors_topic', '/features/descriptors'),
-                ('matches_topic', '/local_view/matches'),
-                ('matching_algorithm', 'temporal_feature_matching'),
-                ('similarity_threshold', 0.6),
-                ('max_templates', 20),
-                ('enable_debug', False),
-                ('debug_level', 0),
-                ('min_match_count', 15),
-                ('match_ratio_threshold', 0.7),
-                ('temporal_weight_factor', 5.0),
-                ('recent_template_priority', 5),
-                # 🔧 水下环境特定参数
-                ('underwater_mode', True),
-                ('frame_skip_threshold', 0.8),
-                ('max_matches_per_second', 10),
-                ('min_template_age', 3.0),                # 模板最小年龄
-                ('significant_change_threshold', 0.15),   # 显著变化阈值
-                ('temporal_smoothing_window', 5),         # 时间平滑窗口
-            ]
-        )
-        
-        # 获取参数
-        self.descriptors_topic = self.get_parameter('descriptors_topic').value
-        self.matches_topic = self.get_parameter('matches_topic').value
-        self.similarity_threshold = self.get_parameter('similarity_threshold').value
-        self.max_templates = self.get_parameter('max_templates').value
-        self.enable_debug = self.get_parameter('enable_debug').value
-        self.debug_level = self.get_parameter('debug_level').value
-        self.min_match_count = self.get_parameter('min_match_count').value
-        self.match_ratio_threshold = self.get_parameter('match_ratio_threshold').value
-        self.temporal_weight_factor = self.get_parameter('temporal_weight_factor').value
-        self.recent_template_priority = self.get_parameter('recent_template_priority').value
+        # 参数配置
+        self.descriptors_topic = '/features/descriptors'
+        self.matches_topic = '/local_view/matches'
+        self.similarity_threshold = 0.5  # 🔧 降低相似度阈值，提升视觉链路灵敏度
+        self.max_templates = 20
+        self.enable_debug = True
+        self.debug_level = 1
+        self.min_match_count = 15
+        self.match_ratio_threshold = 0.7
+        self.temporal_weight_factor = 5.0
+        self.recent_template_priority = 5
         
         # 水下环境参数
-        self.underwater_mode = self.get_parameter('underwater_mode').value
-        self.frame_skip_threshold = self.get_parameter('frame_skip_threshold').value
-        self.max_matches_per_second = self.get_parameter('max_matches_per_second').value
-        self.min_template_age = self.get_parameter('min_template_age').value
-        self.significant_change_threshold = self.get_parameter('significant_change_threshold').value
-        self.temporal_smoothing_window = self.get_parameter('temporal_smoothing_window').value
+        self.underwater_mode = True
+        self.frame_skip_threshold = 0.8
+        self.max_matches_per_second = 10
+        self.min_template_age = 3.0
+        self.significant_change_threshold = 0.15
+        self.temporal_smoothing_window = 5
         
         # CV Bridge
         self.bridge = CvBridge()
@@ -198,21 +173,44 @@ class LocalViewNode(Node):
             # 假设描述符以图像格式传输
             cv_image = self.bridge.imgmsg_to_cv2(msg, desired_encoding='passthrough')
             
-            # 检查是否为有效的描述符数据
+            # 🔧 修复：更好的描述符解码逻辑
+            if cv_image is None:
+                self.get_logger().warn('⚠️ 描述符图像为空')
+                return None
+            
+            # 检查图像尺寸
+            if self.debug_level >= 2 and self.descriptor_count % 50 == 0:  # 🔧 减少日志频率
+                self.get_logger().info(f'🔍 描述符图像: 形状={cv_image.shape}, 类型={cv_image.dtype}')
+            
+            # 转换为浮点数
             if cv_image.dtype != np.float32:
                 cv_image = cv_image.astype(np.float32)
             
-            # 重塑为描述符格式
+            # 🔧 修复：更智能的描述符重塑
             if len(cv_image.shape) == 3:
-                descriptors = cv_image.reshape(-1, cv_image.shape[-1])
-            else:
+                # 3D图像：假设最后一维是描述符维度
+                height, width, channels = cv_image.shape
+                descriptors = cv_image.reshape(-1, channels)
+            elif len(cv_image.shape) == 2:
+                # 2D图像：假设每行是一个描述符
                 descriptors = cv_image
+            else:
+                # 1D图像：重塑为单行描述符
+                descriptors = cv_image.reshape(1, -1)
+            
+            # 验证描述符
+            if descriptors.shape[0] == 0 or descriptors.shape[1] == 0:
+                if self.descriptor_count % 100 == 0:  # 🔧 减少警告频率
+                    self.get_logger().warn('⚠️ 描述符形状无效')
+                return None
+            
+            if self.debug_level >= 1 and self.descriptor_count % 100 == 0:  # 🔧 减少日志频率
+                self.get_logger().info(f'✅ 解码描述符: {descriptors.shape[0]}个特征, {descriptors.shape[1]}维')
             
             return descriptors
             
         except Exception as e:
-            if self.debug_level >= 2:
-                self.get_logger().error(f'描述符解码失败: {e}')
+            self.get_logger().error(f'❌ 描述符解码失败: {e}')
             return None
     
     def _perform_matching(self, descriptors: np.ndarray, current_time: float) -> dict:
@@ -373,17 +371,17 @@ class LocalViewNode(Node):
         self.last_frame_time = current_time
         self.last_similarity = match_result['similarity']
         
-        # 定期报告
-        if self.processed_frame_count % 100 == 0:
-            skip_rate = self.skipped_frames / self.frame_count if self.frame_count > 0 else 0
-            match_rate = self.match_count / self.processed_frame_count if self.processed_frame_count > 0 else 0
-            
+        # 🔧 大幅降低日志输出频率 - 每200次匹配显示一次
+        if not hasattr(self, '_match_count'):
+            self._match_count = 0
+        self._match_count += 1
+        
+        if self._match_count % 200 == 1:
             self.get_logger().info(
-                f'🌊 处理统计: 总帧数={self.frame_count}, '
-                f'处理帧数={self.processed_frame_count}, '
-                f'跳过率={skip_rate:.1%}, '
-                f'匹配率={match_rate:.1%}, '
-                f'模板数={len(self.templates)}'
+                f'👁️ 视觉更新#{self._match_count}: 相似度={match_result["similarity"]:.3f}, '
+                f'模板ID={match_result["template_id"]:.1f}, 匹配={match_result["match_score"]:.1f}, '
+                f'新颖={match_result["novelty"]:.1f}, 强度={match_result["strength"]:.3f}, '
+                f'神经元中心={match_result["neuron_center"]}, 世界中心={match_result["world_center"]}'
             )
 
 def main(args=None):

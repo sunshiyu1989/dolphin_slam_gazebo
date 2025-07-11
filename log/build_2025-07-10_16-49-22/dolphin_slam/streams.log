@@ -1,0 +1,32 @@
+[0.331s] Invoking command in '/home/cetc3/dolphin_slam_ws/src/dolphin_slam': PYTHONPATH=/home/cetc3/dolphin_slam_ws/build/dolphin_slam/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/cetc3/dolphin_slam_ws/install/dolphin_slam/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py egg_info --egg-base ../../build/dolphin_slam build --build-base /home/cetc3/dolphin_slam_ws/build/dolphin_slam/build install --record /home/cetc3/dolphin_slam_ws/build/dolphin_slam/install.log --single-version-externally-managed install_data
+[0.451s] running egg_info
+[0.451s] writing ../../build/dolphin_slam/dolphin_slam.egg-info/PKG-INFO
+[0.451s] writing dependency_links to ../../build/dolphin_slam/dolphin_slam.egg-info/dependency_links.txt
+[0.451s] writing entry points to ../../build/dolphin_slam/dolphin_slam.egg-info/entry_points.txt
+[0.451s] writing requirements to ../../build/dolphin_slam/dolphin_slam.egg-info/requires.txt
+[0.451s] writing top-level names to ../../build/dolphin_slam/dolphin_slam.egg-info/top_level.txt
+[0.452s] reading manifest file '../../build/dolphin_slam/dolphin_slam.egg-info/SOURCES.txt'
+[0.452s] adding license file 'LICENSE.txt'
+[0.453s] writing manifest file '../../build/dolphin_slam/dolphin_slam.egg-info/SOURCES.txt'
+[0.453s] running build
+[0.453s] running build_py
+[0.454s] running install
+[0.454s] running install_lib
+[0.456s] running install_data
+[0.456s] running install_egg_info
+[0.457s] removing '/home/cetc3/dolphin_slam_ws/install/dolphin_slam/lib/python3.10/site-packages/dolphin_slam-1.0.0-py3.10.egg-info' (and everything under it)
+[0.457s] Copying ../../build/dolphin_slam/dolphin_slam.egg-info to /home/cetc3/dolphin_slam_ws/install/dolphin_slam/lib/python3.10/site-packages/dolphin_slam-1.0.0-py3.10.egg-info
+[0.458s] running install_scripts
+[0.469s] Installing dataset_player_node script to /home/cetc3/dolphin_slam_ws/install/dolphin_slam/lib/dolphin_slam
+[0.470s] Installing enhanced_waypoint_controller_node script to /home/cetc3/dolphin_slam_ws/install/dolphin_slam/lib/dolphin_slam
+[0.470s] Installing experience_map_node script to /home/cetc3/dolphin_slam_ws/install/dolphin_slam/lib/dolphin_slam
+[0.470s] Installing image_processing_node script to /home/cetc3/dolphin_slam_ws/install/dolphin_slam/lib/dolphin_slam
+[0.470s] Installing local_view_node script to /home/cetc3/dolphin_slam_ws/install/dolphin_slam/lib/dolphin_slam
+[0.470s] Installing place_cell_node script to /home/cetc3/dolphin_slam_ws/install/dolphin_slam/lib/dolphin_slam
+[0.470s] Installing robot_state_node script to /home/cetc3/dolphin_slam_ws/install/dolphin_slam/lib/dolphin_slam
+[0.470s] Installing simple_odom_publisher_node script to /home/cetc3/dolphin_slam_ws/install/dolphin_slam/lib/dolphin_slam
+[0.470s] Installing simple_waypoint_controller_node script to /home/cetc3/dolphin_slam_ws/install/dolphin_slam/lib/dolphin_slam
+[0.470s] Installing trajectory_evaluator_node script to /home/cetc3/dolphin_slam_ws/install/dolphin_slam/lib/dolphin_slam
+[0.470s] Installing visual_chain_diagnostic script to /home/cetc3/dolphin_slam_ws/install/dolphin_slam/lib/dolphin_slam
+[0.470s] writing list of installed files to '/home/cetc3/dolphin_slam_ws/build/dolphin_slam/install.log'
+[0.485s] Invoked command in '/home/cetc3/dolphin_slam_ws/src/dolphin_slam' returned '0': PYTHONPATH=/home/cetc3/dolphin_slam_ws/build/dolphin_slam/prefix_override:/usr/lib/python3/dist-packages/colcon_core/task/python/colcon_distutils_commands:/home/cetc3/dolphin_slam_ws/install/dolphin_slam/lib/python3.10/site-packages:${PYTHONPATH} /usr/bin/python3 -W ignore:setup.py install is deprecated -W ignore:easy_install command is deprecated setup.py egg_info --egg-base ../../build/dolphin_slam build --build-base /home/cetc3/dolphin_slam_ws/build/dolphin_slam/build install --record /home/cetc3/dolphin_slam_ws/build/dolphin_slam/install.log --single-version-externally-managed install_data

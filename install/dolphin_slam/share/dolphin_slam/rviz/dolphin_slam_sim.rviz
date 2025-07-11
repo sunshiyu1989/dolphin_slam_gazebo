@@ -221,7 +221,7 @@ Visualization Manager:
         Durability Policy: Volatile
         History Policy: Keep Last
         Reliability Policy: Reliable
-        Value: /robot/trajectory
+        Value: /dolphin_slam/trajectory
       Value: true
       
     - Class: rviz_default_plugins/MarkerArray

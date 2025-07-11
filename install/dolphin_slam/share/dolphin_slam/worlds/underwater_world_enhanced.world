@@ -1,262 +1,423 @@
 <?xml version="1.0" ?>
-<sdf version="1.4">
+<sdf version="1.6">
   <world name="underwater_world_enhanced">
-    <!-- 物理设置 -->
-    <physics type="ode">
-      <gravity>0 0 -9.81</gravity>
-      <ode>
-        <solver>
-          <type>quick</type>
-          <iters>50</iters>
-          <sor>1.4</sor>
-        </solver>
-        <constraints>
-          <cfm>0.0</cfm>
-          <erp>0.2</erp>
-          <contact_max_correcting_vel>100.0</contact_max_correcting_vel>
-          <contact_surface_layer>0.0</contact_surface_layer>
-        </constraints>
-      </ode>
+    
+    <!-- 基础设置 -->
+    <gravity>0 0 -9.81</gravity>
+    <magnetic_field>6e-06 2.3e-05 -4.2e-05</magnetic_field>
+    <atmosphere type="adiabatic"/>
+    
+    <!-- 物理引擎 -->
+    <physics name="default_physics" default="0" type="ode">
+      <max_step_size>0.001</max_step_size>
+      <real_time_factor>1</real_time_factor>
       <real_time_update_rate>1000</real_time_update_rate>
     </physics>
-
-    <!-- 光照设置 -->
+    
+    <!-- 🎨 蓝色调水下环境 -->
+    <scene>
+      <grid>false</grid>
+      <ambient>0.1 0.3 0.6 1</ambient>
+      <background>0.05 0.15 0.4 1</background>
+      <shadows>true</shadows>
+      <fog>
+        <type>exp2</type>
+        <color>0.1 0.3 0.6</color>
+        <density>0.01</density>
+      </fog>
+    </scene>
+    
+    <!-- 水下光源 -->
     <light type="directional" name="sun">
-      <cast_shadows>true</cast_shadows>
-      <pose>0 0 10 0 0 0</pose>
-      <diffuse>0.8 0.8 0.8 1</diffuse>
-      <specular>0.2 0.2 0.2 1</specular>
+      <pose>0 0 20 0 0 0</pose>
+      <diffuse>0.3 0.5 0.8 1</diffuse>
+      <specular>0.2 0.3 0.4 1</specular>
+      <direction>-0.3 0.1 -0.95</direction>
       <attenuation>
-        <range>1000</range>
-        <constant>0.9</constant>
-        <linear>0.01</linear>
+        <range>50</range>
+        <constant>0.3</constant>
+        <linear>0.02</linear>
         <quadratic>0.001</quadratic>
       </attenuation>
-      <direction>-0.5 0.1 -0.9</direction>
     </light>
-
-    <!-- 海底环境 -->
-    <include>
-      <uri>model://ground_plane</uri>
-      <pose>0 0 -20 0 0 0</pose>
-    </include>
-
-    <!-- 🏛️ Landmark 1: 大型岩石群 -->
-    <model name="rock_formation_1">
-      <pose>2 3 -15 0 0 0</pose>
-      <static>true</static>
-      <link name="rock_link">
-        <visual name="visual">
-          <geometry>
-            <sphere><radius>1.5</radius></sphere>
-          </geometry>
-          <material>
-            <ambient>0.4 0.3 0.2 1</ambient>
-            <diffuse>0.6 0.4 0.3 1</diffuse>
-          </material>
-        </visual>
-        <collision name="collision">
-          <geometry>
-            <sphere><radius>1.5</radius></sphere>
-          </geometry>
-        </collision>
-      </link>
-    </model>
-
-    <!-- 🏛️ Landmark 2: 珊瑚礁结构 -->
-    <model name="coral_reef_1">
-      <pose>-1 -2 -14 0 0 0</pose>
-      <static>true</static>
-      <link name="coral_link">
-        <visual name="visual">
-          <geometry>
-            <cylinder><radius>0.8</radius><length>2.0</length></cylinder>
-          </geometry>
-          <material>
-            <ambient>1.0 0.5 0.3 1</ambient>
-            <diffuse>1.0 0.6 0.4 1</diffuse>
-          </material>
-        </visual>
-        <collision name="collision">
-          <geometry>
-            <cylinder><radius>0.8</radius><length>2.0</length></cylinder>
-          </geometry>
-        </collision>
-      </link>
-    </model>
-
-    <!-- 🏛️ Landmark 3: 沉船残骸 -->
-    <model name="shipwreck">
-      <pose>4 -1 -13.5 0 0 45</pose>
-      <static>true</static>
-      <link name="wreck_link">
-        <visual name="visual">
-          <geometry>
-            <box><size>2.5 0.8 1.0</size></box>
-          </geometry>
-          <material>
-            <ambient>0.3 0.3 0.3 1</ambient>
-            <diffuse>0.4 0.4 0.4 1</diffuse>
-          </material>
-        </visual>
-        <collision name="collision">
-          <geometry>
-            <box><size>2.5 0.8 1.0</size></box>
-          </geometry>
-        </collision>
-      </link>
-    </model>
-
-    <!-- 🏛️ Landmark 4: 海底柱状结构 -->
-    <model name="sea_pillar_1">
-      <pose>1 -4 -14.5 0 0 0</pose>
-      <static>true</static>
-      <link name="pillar_link">
-        <visual name="visual">
-          <geometry>
-            <cylinder><radius>0.3</radius><length>3.0</length></cylinder>
-          </geometry>
-          <material>
-            <ambient>0.2 0.4 0.6 1</ambient>
-            <diffuse>0.3 0.5 0.7 1</diffuse>
-          </material>
-        </visual>
-        <collision name="collision">
-          <geometry>
-            <cylinder><radius>0.3</radius><length>3.0</length></cylinder>
-          </geometry>
-        </collision>
-      </link>
-    </model>
-
-    <!-- 🏛️ Landmark 5: 海藻群 -->
-    <model name="seaweed_cluster">
-      <pose>-2 1 -14 0 0 0</pose>
-      <static>true</static>
-      <link name="seaweed_link">
-        <visual name="visual">
-          <geometry>
-            <cylinder><radius>0.1</radius><length>4.0</length></cylinder>
-          </geometry>
-          <material>
-            <ambient>0.1 0.6 0.2 1</ambient>
-            <diffuse>0.2 0.8 0.3 1</diffuse>
-          </material>
-        </visual>
-      </link>
-    </model>
-
-    <!-- 🏛️ Landmark 6: 大型贝壳 -->
-    <model name="giant_shell">
-      <pose>3 2 -14.8 0 0 30</pose>
-      <static>true</static>
-      <link name="shell_link">
-        <visual name="visual">
-          <geometry>
-            <sphere><radius>0.6</radius></sphere>
-          </geometry>
-          <material>
-            <ambient>0.9 0.8 0.7 1</ambient>
-            <diffuse>1.0 0.9 0.8 1</diffuse>
-          </material>
-        </visual>
-        <collision name="collision">
-          <geometry>
-            <sphere><radius>0.6</radius></sphere>
-          </geometry>
-        </collision>
-      </link>
-    </model>
-
-    <!-- 🏛️ Landmark 7: 金字塔状岩石 -->
-    <model name="pyramid_rock">
-      <pose>-3 -1 -15.2 0 0 0</pose>
-      <static>true</static>
-      <link name="pyramid_link">
-        <visual name="visual">
-          <geometry>
-            <box><size>1.2 1.2 1.8</size></box>
-          </geometry>
-          <material>
-            <ambient>0.5 0.4 0.3 1</ambient>
-            <diffuse>0.7 0.5 0.4 1</diffuse>
-          </material>
-        </visual>
-        <collision name="collision">
-          <geometry>
-            <box><size>1.2 1.2 1.8</size></box>
-          </geometry>
-        </collision>
-      </link>
-    </model>
-
-    <!-- 🏛️ Landmark 8: 漂浮的水雷残骸 -->
-    <model name="mine_remnant">
-      <pose>0 4 -13.8 0 0 0</pose>
-      <static>true</static>
-      <link name="mine_link">
-        <visual name="visual">
-          <geometry>
-            <sphere><radius>0.7</radius></sphere>
-          </geometry>
-          <material>
-            <ambient>0.1 0.1 0.1 1</ambient>
-            <diffuse>0.2 0.2 0.2 1</diffuse>
-          </material>
-        </visual>
-        <collision name="collision">
-          <geometry>
-            <sphere><radius>0.7</radius></sphere>
-          </geometry>
-        </collision>
-      </link>
-    </model>
-
-    <!-- 💡 增强光照 - 模拟阳光穿透 -->
+    
+    <!-- 额外的水下点光源 -->
     <light type="point" name="underwater_light_1">
-      <pose>0 0 -10 0 0 0</pose>
-      <diffuse>0.6 0.7 0.9 1</diffuse>
-      <specular>0.3 0.4 0.5 1</specular>
+      <pose>15 15 -8 0 0 0</pose>
+      <diffuse>0.4 0.6 0.9 1</diffuse>
+      <specular>0.2 0.3 0.4 1</specular>
       <attenuation>
-        <range>15</range>
-        <constant>0.5</constant>
-        <linear>0.1</linear>
-        <quadratic>0.05</quadratic>
+        <range>25</range>
+        <constant>0.4</constant>
+        <linear>0.03</linear>
+        <quadratic>0.002</quadratic>
       </attenuation>
     </light>
-
-    <!-- 场景范围提示标记 -->
-    <model name="boundary_marker_1">
-      <pose>5 5 -12 0 0 0</pose>
+    
+    <light type="point" name="underwater_light_2">
+      <pose>-15 -15 -12 0 0 0</pose>
+      <diffuse>0.3 0.5 0.8 1</diffuse>
+      <specular>0.1 0.2 0.3 1</specular>
+      <attenuation>
+        <range>20</range>
+        <constant>0.5</constant>
+        <linear>0.04</linear>
+        <quadratic>0.003</quadratic>
+      </attenuation>
+    </light>
+    
+    <!-- 🎨 蓝色调海底平面 -->
+    <model name="ground_plane">
       <static>true</static>
-      <link name="marker_link">
+      <link name="link">
+        <collision name="collision">
+          <geometry>
+            <plane>
+              <normal>0 0 1</normal>
+              <size>200 200</size>
+            </plane>
+          </geometry>
+          <surface>
+            <friction>
+              <ode>
+                <mu>100</mu>
+                <mu2>50</mu2>
+              </ode>
+            </friction>
+          </surface>
+        </collision>
         <visual name="visual">
           <geometry>
-            <cylinder><radius>0.1</radius><length>6.0</length></cylinder>
+            <plane>
+              <normal>0 0 1</normal>
+              <size>200 200</size>
+            </plane>
           </geometry>
           <material>
-            <ambient>1.0 0.0 0.0 1</ambient>
-            <diffuse>1.0 0.0 0.0 1</diffuse>
+            <ambient>0.1 0.2 0.4 1</ambient>
+            <diffuse>0.2 0.3 0.6 1</diffuse>
+            <specular>0.1 0.15 0.2 1</specular>
+          </material>
+        </visual>
+      </link>
+      <pose>0 0 -20 0 0 0</pose>
+    </model>
+    
+    <!-- 🗺️ 分散分布的珊瑚礁群 -->
+    <model name="coral_reef_1">
+      <pose>8 12 -15 0 0 0.3</pose>
+      <static>true</static>
+      <link name="link">
+        <collision name="collision">
+          <geometry>
+            <cylinder>
+              <radius>1.2</radius>
+              <length>4.0</length>
+            </cylinder>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <cylinder>
+              <radius>1.2</radius>
+              <length>4.0</length>
+            </cylinder>
+          </geometry>
+          <material>
+            <ambient>0.8 0.4 0.2 1</ambient>
+            <diffuse>0.9 0.5 0.3 1</diffuse>
+            <specular>0.3 0.2 0.1 1</specular>
           </material>
         </visual>
       </link>
     </model>
-
-    <model name="boundary_marker_2">
-      <pose>-5 -5 -12 0 0 0</pose>
+    
+    <model name="coral_reef_2">
+      <pose>-12 8 -18 0 0 -0.2</pose>
       <static>true</static>
-      <link name="marker_link">
+      <link name="link">
+        <collision name="collision">
+          <geometry>
+            <cylinder>
+              <radius>0.8</radius>
+              <length>3.5</length>
+            </cylinder>
+          </geometry>
+        </collision>
         <visual name="visual">
           <geometry>
-            <cylinder><radius>0.1</radius><length>6.0</length></cylinder>
+            <cylinder>
+              <radius>0.8</radius>
+              <length>3.5</length>
+            </cylinder>
           </geometry>
           <material>
-            <ambient>1.0 0.0 0.0 1</ambient>
-            <diffuse>1.0 0.0 0.0 1</diffuse>
+            <ambient>0.7 0.3 0.1 1</ambient>
+            <diffuse>0.8 0.4 0.2 1</diffuse>
+            <specular>0.2 0.1 0.05 1</specular>
           </material>
         </visual>
       </link>
     </model>
-
+    
+    <model name="coral_reef_3">
+      <pose>15 -10 -16 0 0 0.5</pose>
+      <static>true</static>
+      <link name="link">
+        <collision name="collision">
+          <geometry>
+            <cylinder>
+              <radius>1.0</radius>
+              <length>3.8</length>
+            </cylinder>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <cylinder>
+              <radius>1.0</radius>
+              <length>3.8</length>
+            </cylinder>
+          </geometry>
+          <material>
+            <ambient>0.6 0.2 0.1 1</ambient>
+            <diffuse>0.7 0.3 0.2 1</diffuse>
+            <specular>0.2 0.1 0.05 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+    
+    <!-- 🗺️ 分散分布的岩石群 -->
+    <model name="rock_formation_1">
+      <pose>-8 15 -17 0 0 0</pose>
+      <static>true</static>
+      <link name="link">
+        <collision name="collision">
+          <geometry>
+            <sphere>
+              <radius>2.5</radius>
+            </sphere>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <sphere>
+              <radius>2.5</radius>
+            </sphere>
+          </geometry>
+          <material>
+            <ambient>0.3 0.3 0.4 1</ambient>
+            <diffuse>0.4 0.4 0.5 1</diffuse>
+            <specular>0.1 0.1 0.1 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+    
+    <model name="rock_formation_2">
+      <pose>12 -12 -19 0 0 0</pose>
+      <static>true</static>
+      <link name="link">
+        <collision name="collision">
+          <geometry>
+            <sphere>
+              <radius>1.8</radius>
+            </sphere>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <sphere>
+              <radius>1.8</radius>
+            </sphere>
+          </geometry>
+          <material>
+            <ambient>0.2 0.2 0.3 1</ambient>
+            <diffuse>0.3 0.3 0.4 1</diffuse>
+            <specular>0.1 0.1 0.1 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+    
+    <model name="rock_formation_3">
+      <pose>-15 -8 -14 0 0 0</pose>
+      <static>true</static>
+      <link name="link">
+        <collision name="collision">
+          <geometry>
+            <sphere>
+              <radius>2.0</radius>
+            </sphere>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <sphere>
+              <radius>2.0</radius>
+            </sphere>
+          </geometry>
+          <material>
+            <ambient>0.25 0.25 0.35 1</ambient>
+            <diffuse>0.35 0.35 0.45 1</diffuse>
+            <specular>0.1 0.1 0.1 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+    
+    <!-- 🗺️ 分散分布的海藻群 -->
+    <model name="seaweed_1">
+      <pose>5 -15 -16 0 0 0</pose>
+      <static>true</static>
+      <link name="link">
+        <collision name="collision">
+          <geometry>
+            <cylinder>
+              <radius>0.3</radius>
+              <length>2.5</length>
+            </cylinder>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <cylinder>
+              <radius>0.3</radius>
+              <length>2.5</length>
+            </cylinder>
+          </geometry>
+          <material>
+            <ambient>0.1 0.4 0.2 1</ambient>
+            <diffuse>0.2 0.5 0.3 1</diffuse>
+            <specular>0.1 0.2 0.1 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+    
+    <model name="seaweed_2">
+      <pose>-10 -15 -18 0 0 0</pose>
+      <static>true</static>
+      <link name="link">
+        <collision name="collision">
+          <geometry>
+            <cylinder>
+              <radius>0.4</radius>
+              <length>3.0</length>
+            </cylinder>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <cylinder>
+              <radius>0.4</radius>
+              <length>3.0</length>
+            </cylinder>
+          </geometry>
+          <material>
+            <ambient>0.15 0.45 0.25 1</ambient>
+            <diffuse>0.25 0.55 0.35 1</diffuse>
+            <specular>0.1 0.2 0.1 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+    
+    <model name="seaweed_3">
+      <pose>18 5 -17 0 0 0</pose>
+      <static>true</static>
+      <link name="link">
+        <collision name="collision">
+          <geometry>
+            <cylinder>
+              <radius>0.35</radius>
+              <length>2.8</length>
+            </cylinder>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <cylinder>
+              <radius>0.35</radius>
+              <length>2.8</length>
+            </cylinder>
+          </geometry>
+          <material>
+            <ambient>0.12 0.42 0.22 1</ambient>
+            <diffuse>0.22 0.52 0.32 1</diffuse>
+            <specular>0.1 0.2 0.1 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+    
+    <!-- 🗺️ 分散分布的海底山脉（使用cylinder替代cone） -->
+    <model name="seamount_1">
+      <pose>20 20 -22 0 0 0</pose>
+      <static>true</static>
+      <link name="link">
+        <collision name="collision">
+          <geometry>
+            <cylinder>
+              <radius>4.0</radius>
+              <length>6.0</length>
+            </cylinder>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <cylinder>
+              <radius>4.0</radius>
+              <length>6.0</length>
+            </cylinder>
+          </geometry>
+          <material>
+            <ambient>0.2 0.25 0.35 1</ambient>
+            <diffuse>0.3 0.35 0.45 1</diffuse>
+            <specular>0.1 0.1 0.1 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+    
+    <model name="seamount_2">
+      <pose>-20 -20 -25 0 0 0</pose>
+      <static>true</static>
+      <link name="link">
+        <collision name="collision">
+          <geometry>
+            <cylinder>
+              <radius>3.5</radius>
+              <length>5.5</length>
+            </cylinder>
+          </geometry>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <cylinder>
+              <radius>3.5</radius>
+              <length>5.5</length>
+            </cylinder>
+          </geometry>
+          <material>
+            <ambient>0.15 0.2 0.3 1</ambient>
+            <diffuse>0.25 0.3 0.4 1</diffuse>
+            <specular>0.1 0.1 0.1 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+    
+    <!-- 关键修复：添加模型状态发布插件 -->
+    <plugin name="gazebo_ros_state" filename="libgazebo_ros_state.so">
+      <ros>
+        <namespace>/gazebo</namespace>
+      </ros>
+      <update_rate>50.0</update_rate>
+      <publish_link_states>true</publish_link_states>
+      <publish_model_states>true</publish_model_states>
+    </plugin>
+    
   </world>
 </sdf>

@@ -1,7 +1,8 @@
 [console_scripts]
 dataset_player_node = dolphin_slam.dataset_player_node:main
-enhanced_waypoint_controller_node = nodes.enhanced_waypoint_controller_node:main
+enhanced_waypoint_controller_node = dolphin_slam.enhanced_waypoint_controller_node:main
 experience_map_node = dolphin_slam.experience_map_node:main
+force_command_publisher = dolphin_slam.force_command_publisher:main
 image_processing_node = dolphin_slam.image_processing_node:main
 local_view_node = dolphin_slam.local_view_node:main
 place_cell_node = dolphin_slam.place_cell_node:main
@@ -9,4 +10,5 @@ robot_state_node = dolphin_slam.robot_state_node:main
 simple_odom_publisher_node = nodes.simple_odom_publisher_node:main
 simple_waypoint_controller_node = nodes.simple_waypoint_controller_node:main
 trajectory_evaluator_node = nodes.trajectory_evaluator_node:main
+visual_chain_diagnostic = dolphin_slam.visual_chain_diagnostic:main
 
